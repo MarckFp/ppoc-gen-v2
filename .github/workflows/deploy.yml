@@ -5,6 +5,9 @@ on:
     tags:
       - "*.*.*"
 
+env:
+  GH_TOKEN: ${{ github.token }}
+
 jobs:
   deploy:
     name: ${{ matrix.name }}
@@ -56,7 +59,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rust 🦀
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
         with:
           targets: ${{ matrix.target }}
 
@@ -97,41 +100,57 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev
 
-      - name: Deploy Web 🌐
-        if: ${{ matrix.platform == 'web' }}
-        uses: DioxusLabs/deploy-action@0.1.1
-
       - name: Deploy ${{ matrix.name }}
-        if: ${{ matrix.platform != 'web'}}
         run: |
           cargo install cargo-binstall
           cargo binstall dioxus-cli -y
           dx bundle --release --platform ${{ matrix.platform }} --features bundle
 
-      - name: Upload Binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.platform }}-${{ matrix.os }}
-          path: target
+      - name: Add 404 Page
+        if: ${{ matrix.platform == 'web'}}
+        run: cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
 
-      - name: Upload Windows
-        if: ${{ matrix.name == 'Windows x86_64 🪟' }}
-        run: gh release upload ${{ github.ref }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
+      - name: Upload web files as artifacts
+        if: ${{ matrix.platform == 'web'}}
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/dx/dx-app/release/web/public/
+
+      - name: Deploy to Github Pages
+        if: ${{ matrix.platform == 'web'}}
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+#      - name: Upload Windows x86_64
+#        if: ${{ matrix.name == 'Windows x86_64 🪟' }}
+#        run: gh release upload ${{ github.ref }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
+
+#      - name: Upload Windows ARM
+#        if: ${{ matrix.name == 'Windows ARM64 🪟' }}
+#        run: gh release upload ${{ github.ref }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
 
       - name: Upload Linux
         if: ${{ matrix.name == 'Linux 🐧' }}
         run: |
           gh release upload ${{ github.ref }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref }}_amd64.deb
           gh release upload ${{ github.ref }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp_${{ github.ref }}-.x86_64.rpm
-#
+
+      - name: Upload MacOS
+        if: ${{ matrix.name == 'MacOS ARM64 🍏' }}
+        run: |
+          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref }}_aarch64.dmg
+          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/macos/bundle/macos/DxApp.app
+
 #      - name: Upload MacOS
+#        if: ${{ matrix.name == 'MacOS ARM64 🍏' }}
 #        run: |
-#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/macos/bundle/
-#
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref }}_aarch64.dmg
+
 #      - name: Upload Android
 #        run: |
 #          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/android/bundle/
-#
-#      - name: Upload iOS
-#        run: |
-#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/ios/bundle/
+
+      - name: Upload iOS
+        if: ${{ matrix.name == 'iOS 📱' }}
+        run: gh release upload ${{ github.ref }} target/dx/dx-app/release/ios/DxApp.app
