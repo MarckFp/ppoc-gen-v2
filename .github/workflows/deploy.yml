@@ -60,11 +60,6 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Setup Version
-        run: |
-          export VERSION=${{ github.ref }}
-          sed -i "s/0.0.0/$VERSION/g" Cargo.toml
-
       - name: Setup Java ☕
         if: ${{ matrix.platform == 'android'}}
         uses: actions/setup-java@v4
