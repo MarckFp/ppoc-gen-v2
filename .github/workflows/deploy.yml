@@ -1,0 +1,143 @@
+name: 'Deploy 🚀'
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  deploy:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows
+          - os: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            name: 'Windows x86_64 🪟'
+            platform: desktop
+          - os: 'windows-latest'
+            target: 'aarch64-pc-windows-msvc'
+            name: 'Windows ARM64 🪟'
+            platform: desktop
+          # MacOS
+          - os: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            name: 'MacOS ARM64 🍏'
+            platform: desktop
+          - os: 'macos-13'
+            target: 'x86_64-apple-darwin'
+            name: 'MacOS x86_64 🍏'
+            platform: desktop
+          # Linux
+          - os: 'ubuntu-latest'
+            target: 'x86_64-unknown-linux-gnu'
+            name: 'Linux 🐧'
+            platform: desktop
+          # Android
+          - os: 'ubuntu-latest'
+            target: 'arch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android'
+            name: 'Android 🤖'
+            platform: android
+          # iOS
+          - os: 'macos-latest'
+            target: 'aarch64-apple-ios,aarch64-apple-ios-sim'
+            name: 'iOS 📱'
+            platform: ios
+          # Web
+          - os: 'ubuntu-latest'
+            target: ''
+            name: 'Web 🌐'
+            platform: web
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Rust 🦀
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Setup Java ☕
+        if: ${{ matrix.platform == 'android'}}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+
+      - name: Setup Android 🤖
+        if: ${{ matrix.platform == 'android'}}
+        uses: android-actions/setup-android@v3
+
+      - name: Setup NDK 🤖
+        if: ${{ matrix.platform == 'android'}}
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Setup GitHub Credentials 🔑
+        run: |
+          git config --global user.email ${{ secrets.GH_EMAIL }}
+          git config --global user.name GitHub_Runner
+
+      - name: Setup OpenSSL 🛡️ for MacOS
+        if: matrix.os == 'macos-latest'
+        run: brew install openssl
+
+      - name: Setup NASM 🛠️ for Windows
+        if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
+        uses: ilammy/setup-nasm@v1
+
+      - name: Deploy ${{ matrix.name }}
+        if: ${{ matrix.platform == 'web' }}
+        uses: DioxusLabs/deploy-action@0.1.1
+
+      - name: Deploy ${{ matrix.name }}
+        if: ${{ matrix.platform != 'web'}}
+        run: |
+          cargo install dioxus-cli
+          dx bundle --release --platform ${{ matrix.platform }} --features bundle
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-${{ matrix.platform }}-${{ matrix.os }}
+          path: target
+
+#  release:
+#    name: Release
+#    runs-on: ubuntu-latest
+#    needs: deploy
+#    steps:
+#      - name: Checkout 🛎️
+#        uses: actions/checkout@v4
+#
+#      - name: Download binaries
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: target
+#          path: ./target
+#
+#      - name: Create Release
+#        run: gh release create ${{ github.ref }} -t ${{ github.ref }} -n "Release ${{ github.ref }}" -F CHANGELOG.md
+#
+#      - name: Upload Windows
+#        run: |
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/windows/bundle/
+#
+#      - name: Upload Linux
+#        run: |
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref }}_amd64.deb
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp_${{ github.ref }}-.x86_64.rpm
+#
+#      - name: Upload MacOS
+#        run: |
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/macos/bundle/
+#
+#      - name: Upload Android
+#        run: |
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/android/bundle/
+#
+#      - name: Upload iOS
+#        run: |
+#          gh release upload ${{ github.ref }} target/dx/dx-app/bundle/ios/bundle/

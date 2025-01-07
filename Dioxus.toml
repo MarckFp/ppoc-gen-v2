@@ -1,0 +1,20 @@
+[application]
+name = "dx-app"
+out_dir = "web"
+
+
+[web.app]
+title = "dx-app"
+base_path = "dx-app"
+
+[web.resource]
+style = []
+script = []
+
+[web.resource.dev]
+script = []
+
+[bundle]
+identifier = "com.dx-app"
+publisher = "MarckFp"
+icon = ["assets/icons/icon.png"]
