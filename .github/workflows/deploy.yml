@@ -75,11 +75,6 @@ jobs:
         if: ${{ matrix.platform == 'android'}}
         run: sdkmanager "ndk;27.2.12479018"
 
-      - name: Setup GitHub Credentials 🔑
-        run: |
-          git config --global user.email ${{ secrets.GH_EMAIL }}
-          git config --global user.name GitHub_Runner
-
       - name: Setup OpenSSL 🛡️ for MacOS
         if: matrix.os == 'macos-latest'
         run: brew install openssl
@@ -117,9 +112,6 @@ jobs:
 #        with:
 #          name: target
 #          path: ./target
-#
-#      - name: Create Release
-#        run: gh release create ${{ github.ref }} -t ${{ github.ref }} -n "Release ${{ github.ref }}" -F CHANGELOG.md
 #
 #      - name: Upload Windows
 #        run: |
