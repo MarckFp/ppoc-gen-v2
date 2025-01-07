@@ -112,14 +112,12 @@ jobs:
 
       - name: Upload web files as artifacts
         if: ${{ matrix.platform == 'web'}}
-        id: deployment
         uses: actions/upload-pages-artifact@v3
         with:
           path: target/dx/dx-app/release/web/public/
 
       - name: Deploy to Github Pages
         if: ${{ matrix.platform == 'web'}}
-        id: deployment
         uses: actions/deploy-pages@v4
 
 #      - name: Upload Windows x86_64
