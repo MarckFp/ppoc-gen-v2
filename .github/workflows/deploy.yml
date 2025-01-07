@@ -41,7 +41,7 @@ jobs:
             platform: desktop
           # Android
           - os: 'ubuntu-latest'
-            target: 'arch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android'
+            target: 'armv7-linux-androideabi,i686-linux-android,x86_64-linux-android'
             name: 'Android 🤖'
             platform: android
           # iOS
@@ -60,6 +60,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: write
+      discussions: write
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -142,16 +144,13 @@ jobs:
           gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm
           gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
 
-      - name: Upload MacOS
+      - name: Upload MacOS ARM64
         if: ${{ matrix.name == 'MacOS ARM64 🍏' }}
-        run: |
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/macos/DxApp.app
+        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
 
-#      - name: Upload MacOS
-#        if: ${{ matrix.name == 'MacOS ARM64 🍏' }}
-#        run: |
-#          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
+      - name: Upload MacOS x86_64
+        if: ${{ matrix.name == 'MacOS x86_64 🍏' }}
+        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}x64.dmg
 
 #      - name: Upload Android
 #        run: |
@@ -159,4 +158,6 @@ jobs:
 
       - name: Upload iOS
         if: ${{ matrix.name == 'iOS 📱' }}
-        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/release/ios/DxApp.app
+        run: |
+          zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
+          gh release upload ${{ github.ref_name }} ios.zip
