@@ -16,15 +16,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows
-          - os: 'windows-latest'
-            target: 'x86_64-pc-windows-msvc'
-            name: 'Windows x86_64 🪟'
-            platform: desktop
-          - os: 'windows-latest'
-            target: 'aarch64-pc-windows-msvc'
-            name: 'Windows ARM64 🪟'
-            platform: desktop
+          # Windows Failing until https://github.com/DioxusLabs/dioxus/issues/3233 is released
+#          - os: 'windows-latest'
+#            target: 'x86_64-pc-windows-msvc'
+#            name: 'Windows x86_64 🪟'
+#            platform: desktop
+#          - os: 'windows-latest'
+#            target: 'aarch64-pc-windows-msvc'
+#            name: 'Windows ARM64 🪟'
+#            platform: desktop
           # MacOS
           - os: 'macos-latest'
             target: 'aarch64-apple-darwin'
@@ -84,7 +84,9 @@ jobs:
 
       - name: Setup NDK 🤖
         if: ${{ matrix.platform == 'android'}}
-        run: sdkmanager "ndk;27.2.12479018"
+        run: |
+          sdkmanager "ndk;27.2.12479018"
+          rustup target add aarch64-linux-android
 
       - name: Setup OpenSSL 🛠️ for MacOS
         if: matrix.os == 'macos-latest'
@@ -150,7 +152,7 @@ jobs:
 
       - name: Upload MacOS x86_64
         if: ${{ matrix.name == 'MacOS x86_64 🍏' }}
-        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}x64.dmg
+        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
 
 #      - name: Upload Android
 #        run: |
