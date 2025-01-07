@@ -1,10 +1,10 @@
 [application]
-name = "dx-app"
+name = "DXApp"
 out_dir = "web"
 
 
 [web.app]
-title = "dx-app"
+title = "DXApp"
 base_path = "dx-app"
 
 [web.resource]
@@ -15,6 +15,6 @@ script = []
 script = []
 
 [bundle]
-identifier = "com.dx-app"
+identifier = "com.dxapp"
 publisher = "MarckFp"
 icon = ["assets/icons/icon.png"]
