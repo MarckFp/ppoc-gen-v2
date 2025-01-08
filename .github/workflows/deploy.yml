@@ -116,9 +116,11 @@ jobs:
           cargo binstall dioxus-cli -y
           dx bundle --release --platform ${{ matrix.platform }} --features bundle
 
-      - name: Add 404 Page
+      - name: Add 404 Page && base path
         if: ${{ matrix.platform == 'web'}}
-        run: cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
+        run: |
+          cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
+          sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
 
       - name: Upload web files as artifacts
         if: ${{ matrix.platform == 'web'}}
