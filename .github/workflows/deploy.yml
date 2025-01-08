@@ -110,6 +110,10 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev
 
+      - name: Setup config 🛠️ for Web
+        if: ${{ matrix.platform == 'web' }}
+        run: sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
+
       - name: Deploy ${{ matrix.name }}
         run: |
           cargo install cargo-binstall
@@ -118,9 +122,7 @@ jobs:
 
       - name: Add 404 Page && base path
         if: ${{ matrix.platform == 'web'}}
-        run: |
-          cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
-          sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
+        run: cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
 
       - name: Upload web files as artifacts
         if: ${{ matrix.platform == 'web'}}
