@@ -2,10 +2,8 @@
 name = "DXApp"
 out_dir = "web"
 
-
 [web.app]
 title = "DXApp"
-base_path = "dx-app"
 
 [web.resource]
 style = []

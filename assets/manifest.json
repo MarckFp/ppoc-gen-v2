@@ -1,0 +1,16 @@
+{
+    "name": "DXApp",
+    "icons": [],
+    "start_url": "/",
+    "id": "/",
+    "display": "standalone",
+    "display_override": ["window-control-overlay", "standalone"],
+    "scope": "/",
+    "theme_color": "#000000",
+    "background_color": "#ffffff",
+    "short_name": "DXApp",
+    "description": "DXApp is a testing cross-platform app",
+    "dir": "ltr",
+    "lang": "en",
+    "orientation": "portrait"
+}
