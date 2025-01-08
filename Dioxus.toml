@@ -15,5 +15,3 @@ script = []
 identifier = "com.dxapp"
 publisher = "MarckFp"
 icon = ["assets/icons/icon.png"]
-copyright = "Copyright 2025 DXApp"
-category = "Utility"

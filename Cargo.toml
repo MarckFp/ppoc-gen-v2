@@ -1,6 +1,6 @@
 [package]
 name = "dx-app"
-version = "0.1.10"
+version = "0.1.11"
 authors = ["Marcos Fernández <marcosfernandezperez9@gmail.com>"]
 edition = "2021"
 publish = false
@@ -26,3 +26,6 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
+
+[target.'cfg(target_os = "android")'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
