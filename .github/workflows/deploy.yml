@@ -115,7 +115,7 @@ jobs:
 
       - name: Deploy ${{ matrix.name }}
         run: |
-          cargo install cargo-binstall
+          cargo install cargo-binstall --version 1.10.19
           cargo binstall dioxus-cli -y
           dx bundle --release --platform ${{ matrix.platform }} --features bundle
 
