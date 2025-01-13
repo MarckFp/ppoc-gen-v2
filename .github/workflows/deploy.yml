@@ -16,15 +16,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows Failing until https://github.com/DioxusLabs/dioxus/issues/3233 is released
-#          - os: 'windows-latest'
-#            target: 'x86_64-pc-windows-msvc'
-#            name: 'Windows x86_64 🪟'
-#            platform: desktop
-#          - os: 'windows-latest'
-#            target: 'aarch64-pc-windows-msvc'
-#            name: 'Windows ARM64 🪟'
-#            platform: desktop
+          - os: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            name: 'Windows x86_64 🪟'
+            platform: desktop
+          - os: 'windows-latest'
+            target: 'aarch64-pc-windows-msvc'
+            name: 'Windows ARM64 🪟'
+            platform: desktop
           # MacOS
           - os: 'macos-latest'
             target: 'aarch64-apple-darwin'
@@ -135,13 +134,13 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-#      - name: Upload Windows x86_64
-#        if: ${{ matrix.name == 'Windows x86_64 🪟' }}
-#        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
+      - name: Upload Windows x86_64
+        if: ${{ matrix.name == 'Windows x86_64 🪟' }}
+        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
 
-#      - name: Upload Windows ARM
-#        if: ${{ matrix.name == 'Windows ARM64 🪟' }}
-#        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
+      - name: Upload Windows ARM
+        if: ${{ matrix.name == 'Windows ARM64 🪟' }}
+        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
 
       - name: Upload Linux
         if: ${{ matrix.name == 'Linux 🐧' }}
@@ -158,9 +157,9 @@ jobs:
         if: ${{ matrix.name == 'MacOS x86_64 🍏' }}
         run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
 
-#      - name: Upload Android
-#        run: |
-#          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/android/bundle/
+      - name: Upload Android
+        run: |
+          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/android/bundle/
 
       - name: Upload iOS
         if: ${{ matrix.name == 'iOS 📱' }}
