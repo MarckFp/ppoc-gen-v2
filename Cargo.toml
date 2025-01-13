@@ -1,12 +1,12 @@
 [package]
 name = "dx-app"
-version = "0.1.15"
+version = "0.0.0-git"
 authors = ["Marcos Fernández <marcosfernandezperez9@gmail.com>"]
 edition = "2021"
 publish = false
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", branch = "main", features = ["router", "fullstack"] }
+dioxus = { version = "0.6.1" , features = ["router", "fullstack"] }
 
 [features]
 default = ["dioxus/web"]

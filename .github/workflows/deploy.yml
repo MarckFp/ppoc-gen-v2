@@ -65,6 +65,16 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
+      - name: Set Cargo.toml version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          mv Cargo.toml Cargo.toml.orig
+          sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.toml.orig >Cargo.toml
+          mv Cargo.lock Cargo.lock.orig
+          sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.lock.orig >Cargo.lock
+
       - name: Setup Rust 🦀
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -117,7 +127,11 @@ jobs:
         run: |
           cargo install cargo-binstall --version 1.10.19
           cargo binstall dioxus-cli -y
-          dx bundle --release --platform ${{ matrix.platform }} --features bundle
+          if [ ${{ matrix.name }} == 'Android 🤖' ]; then
+            dx build --release --platform ${{ matrix.platform }}
+          else
+            dx bundle --release --platform ${{ matrix.platform }} --features bundle
+          fi
 
       - name: Add 404 Page && base path
         if: ${{ matrix.platform == 'web'}}
