@@ -40,12 +40,12 @@ jobs:
             platform: desktop
           # Android
           - os: 'ubuntu-latest'
-            target: 'armv7-linux-androideabi,i686-linux-android,x86_64-linux-android'
+            target: 'aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android'
             name: 'Android 🤖'
             platform: android
           # iOS
           - os: 'macos-latest'
-            target: 'aarch64-apple-ios,aarch64-apple-ios-sim'
+            target: 'aarch64-apple-ios aarch64-apple-ios-sim'
             name: 'iOS 📱'
             platform: ios
           # Web
@@ -76,9 +76,7 @@ jobs:
           sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.lock.orig >Cargo.lock
 
       - name: Setup Rust 🦀
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
 
       - name: Setup Java ☕
         if: ${{ matrix.platform == 'android'}}
@@ -95,7 +93,6 @@ jobs:
         if: ${{ matrix.platform == 'android'}}
         run: |
           sdkmanager "ndk;27.2.12479018"
-          rustup target add aarch64-linux-android
 
       - name: Setup OpenSSL 🛠️ for MacOS
         if: matrix.os == 'macos-latest'
@@ -124,14 +121,18 @@ jobs:
         run: sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
 
       - name: Deploy ${{ matrix.name }}
+        if: ${{  matrix.name != 'Android 🤖' }}
         run: |
           cargo install cargo-binstall --version 1.10.19
           cargo binstall dioxus-cli -y
-          if [ ${{ matrix.name }} == 'Android 🤖' ]; then
-            dx build --release --platform ${{ matrix.platform }}
-          else
-            dx bundle --release --platform ${{ matrix.platform }} --features bundle
-          fi
+          dx bundle --release --platform ${{ matrix.platform }} --features bundle
+
+      - name: Deploy ${{ matrix.name }}
+        if: ${{  matrix.name == 'Android 🤖' }}
+        run: |
+          cargo install cargo-binstall --version 1.10.19
+          cargo binstall dioxus-cli -y
+          dx build --release --platform ${{ matrix.platform }}
 
       - name: Add 404 Page && base path
         if: ${{ matrix.platform == 'web'}}
