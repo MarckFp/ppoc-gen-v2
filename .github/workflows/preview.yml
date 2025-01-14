@@ -10,7 +10,6 @@ env:
 
 jobs:
   preview:
-    enable: false #This is disabled since it overrides Github pages deployment
     name: Deploy Preview 🌐
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
