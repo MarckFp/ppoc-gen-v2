@@ -2,6 +2,8 @@ name: 'Deploy 🚀'
 
 on:
   push:
+    tags:
+      - '*.*.*'
 
 env:
   GH_TOKEN: ${{ github.token }}
@@ -11,10 +13,14 @@ jobs:
   deploy:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    if: github.ref == 'refs/tags/*.*.*'
     environment:
       name: production
       url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      contents: write
+      discussions: write
     strategy:
       fail-fast: false
       matrix:
@@ -57,11 +63,6 @@ jobs:
             target: ''
             name: 'Web 🌐'
             platform: web
-    permissions:
-      pages: write
-      id-token: write
-      contents: write
-      discussions: write
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -168,45 +169,3 @@ jobs:
           elif [[ "${{ matrix.name }}" == "Android 🤖" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/app-debug.apk
           fi
-  preview:
-    name: Deploy Preview 🌐
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    environment:
-      name: development
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v4
-
-      - name: Cache Rust 🦀
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Setup Dependencies & Configs 🛠️
-        shell: bash
-        run: |
-          sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev curl wget file libxdo-dev libayatana-appindicator3-dev librsvg2-dev -y
-          sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
-          cargo install cargo-binstall
-          cargo binstall dioxus-cli -y
-
-      - name: Build & Deploy 🚀
-        run: |
-          dx bundle --release --platform ${{ matrix.platform }} --features bundle
-          cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
-
-      - name: Upload web files as artifacts 📦
-        if: ${{ matrix.platform == 'web'}}
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: target/dx/dx-app/release/web/public/
-
-      - name: Deploy to Github Pages 🌐
-        if: ${{ matrix.platform == 'web'}}
-        id: deployment
-        uses: actions/deploy-pages@v4
