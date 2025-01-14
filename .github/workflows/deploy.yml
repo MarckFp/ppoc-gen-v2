@@ -159,10 +159,6 @@ jobs:
             zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
             gh release upload ${{ github.ref_name }} ios.zip
           elif [[ ${{ matrix.name }} == "Android 🤖" ]]; then
-            ls -l target/dx/dx-app/release/android/app
-            ls -l target/dx/dx-app/release/android/app/app
-            ls -l target/dx/dx-app/release/android/app/app/build
-            ls -l target/dx/dx-app/release/android/app/app/build/outputs
-            ls -l target/dx/dx-app/release/android/app/app/build/outputs/apk
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/DxApp_${{ github.ref_name }}.apk
+            ls -l target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk
           fi
