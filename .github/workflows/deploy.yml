@@ -17,14 +17,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: 'windows-latest'
-            target: 'x86_64-pc-windows-msvc'
-            name: 'Windows x86_64 🪟'
-            platform: desktop
-          - os: 'windows-latest'
-            target: 'aarch64-pc-windows-msvc'
-            name: 'Windows ARM64 🪟'
-            platform: desktop
+        # Windows: Currently stopped until Dioxus 0.6.2 is released with a patch to fix Windows binaries
+#          - os: 'windows-latest'
+#            target: 'x86_64-pc-windows-msvc'
+#            name: 'Windows x86_64 🪟'
+#            platform: desktop
+#          - os: 'windows-latest'
+#            target: 'aarch64-pc-windows-msvc'
+#            name: 'Windows ARM64 🪟'
+#            platform: desktop
           # MacOS
           - os: 'macos-latest'
             target: 'aarch64-apple-darwin'
@@ -125,14 +126,14 @@ jobs:
       - name: Deploy ${{ matrix.name }}
         if: ${{  matrix.platform != 'android' }}
         run: |
-          cargo install cargo-binstall --version 1.10.19
+          cargo install cargo-binstall
           cargo binstall dioxus-cli -y
           dx bundle --release --platform ${{ matrix.platform }} --features bundle
 
       - name: Deploy ${{ matrix.name }}
         if: ${{  matrix.platform == 'android' }}
         run: |
-          cargo install cargo-binstall --version 1.10.19
+          cargo install cargo-binstall
           cargo binstall dioxus-cli -y
           dx build --release --platform ${{ matrix.platform }}
 
@@ -177,7 +178,8 @@ jobs:
       - name: Upload Android
         if: ${{  matrix.name == 'Android 🤖' }}
         run: |
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/android/bundle/
+          ls -l target/dx/dx-app/release/android/app/
+          gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/DxApp_${{ github.ref_name }}.apk
 
       - name: Upload iOS
         if: ${{ matrix.name == 'iOS 📱' }}
