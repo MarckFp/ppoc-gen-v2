@@ -79,9 +79,11 @@ jobs:
         shell: bash
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: sed -i "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/g" Cargo.toml Cargo.lock
+        run: |
+          sed -i "s/0\\.0\\.0-git/${RELEASE_TAG##*/v}/" Cargo.toml
+          sed -i "s/0\\.0\\.0-git/${RELEASE_TAG##*/v}/" Cargo.lock
 
-      - name: Setup Rust 🦀
+      - name: Setup Rust Targets 🦀
         if: ${{ matrix.platform != 'web'}}
         run: rustup target add ${{ matrix.target }}
 
@@ -96,90 +98,71 @@ jobs:
         if: ${{ matrix.platform == 'android'}}
         uses: android-actions/setup-android@v3
 
-      - name: Setup NDK 🤖
-        if: ${{ matrix.platform == 'android'}}
-        run: sdkmanager "ndk;$NDK_VERSION"
+      - name: Setup Dependencies & Configs 🛠️
+        run: |
+          if [[ ${{ matrix.platform }} == "android" ]]; then
+            sdkmanager "ndk;$NDK_VERSION"
+          elif [[ ${{ matrix.os }} == "macos-latest" ]]; then
+            brew install openssl
+          elif [[ ${{ matrix.os }} == "ubuntu-latest" ]]; then
+            sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev -y
+          elif [[ ${{ matrix.platform }} == "web" ]]; then
+            sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
+          fi
+          cargo install cargo-binstall
+          cargo binstall dioxus-cli -y
 
-      - name: Setup OpenSSL 🛠️ for MacOS
-        if: matrix.os == 'macos-latest'
-        run: brew install openssl
-
-      - name: Setup NASM 🛠️ for Windows
+      - name: Setup NASM for Windows 🛠️
         if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
         uses: ilammy/setup-nasm@v1
 
-      - name: Setup dependencies 🛠️ for Linux
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev -y
-
-      - name: Setup config 🛠️ for Web
-        if: ${{ matrix.platform == 'web' }}
-        run: sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
-
-      - name: Deploy ${{ matrix.name }}
+      - name: Build & Deploy ${{ matrix.name }} 🚀
         if: ${{  matrix.platform != 'android' }}
         run: |
-          cargo install cargo-binstall
-          cargo binstall dioxus-cli -y
-          dx bundle --release --platform ${{ matrix.platform }} --features bundle
+          if [[ ${{ matrix.platform }} == "android" ]]; then
+            dx build --release --platform android
+          else
+            dx bundle --release --platform ${{ matrix.platform }} --features bundle
+          fi
 
-      - name: Deploy ${{ matrix.name }}
-        if: ${{  matrix.platform == 'android' }}
-        run: |
-          cargo install cargo-binstall
-          cargo binstall dioxus-cli -y
-          dx build --release --platform ${{ matrix.platform }}
+          if [[ ${{ matrix.platform }} == "web" ]]; then
+            cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
+          fi
 
-      - name: Add 404 Page && base path
-        if: ${{ matrix.platform == 'web'}}
-        run: cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
-
-      - name: Upload web files as artifacts
+      - name: Upload web files as artifacts 📦
         if: ${{ matrix.platform == 'web'}}
         uses: actions/upload-pages-artifact@v3
         with:
           path: target/dx/dx-app/release/web/public/
 
-      - name: Deploy to Github Pages
+      - name: Deploy to Github Pages 🌐
         if: ${{ matrix.platform == 'web'}}
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Upload Windows x86_64
-        if: ${{ matrix.name == 'Windows x86_64 🪟' }}
-        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
 
-      - name: Upload Windows ARM
-        if: ${{ matrix.name == 'Windows ARM64 🪟' }}
-        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
-
-      - name: Upload Linux
-        if: ${{ matrix.name == 'Linux 🐧' }}
+      - name: Upload Artifacts 📦
         run: |
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
-
-      - name: Upload MacOS ARM64
-        if: ${{ matrix.name == 'MacOS ARM64 🍏' }}
-        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
-
-      - name: Upload MacOS x86_64
-        if: ${{ matrix.name == 'MacOS x86_64 🍏' }}
-        run: gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
-
-      - name: Upload Android
-        if: ${{  matrix.name == 'Android 🤖' }}
-        run: |
-          ls -l target/dx/dx-app/release/android/app
-          ls -l target/dx/dx-app/release/android/app/app
-          ls -l target/dx/dx-app/release/android/app/app/build
-          ls -l target/dx/dx-app/release/android/app/app/build/outputs
-          ls -l target/dx/dx-app/release/android/app/app/build/outputs/apk
-          gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/DxApp_${{ github.ref_name }}.apk
-
-      - name: Upload iOS
-        if: ${{ matrix.name == 'iOS 📱' }}
-        run: |
-          zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
-          gh release upload ${{ github.ref_name }} ios.zip
+          if [[ ${{ matrix.name }} == "Windows x86_64 🪟" ]]; then
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
+          elif [[ ${{ matrix.name }} == "Windows ARM64 🪟" ]]; then
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
+          elif [[ ${{ matrix.name }} == "Linux 🐧" ]]; then
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
+          elif [[ ${{ matrix.name }} == "MacOS ARM64 🍏" ]]; then
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
+          elif [[ ${{ matrix.name }} == "MacOS x86_64 🍏" ]]; then
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
+          elif [[ ${{ matrix.name }} == "iOS 📱" ]]; then
+            zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
+            gh release upload ${{ github.ref_name }} ios.zip
+          elif [[ ${{ matrix.name }} == "Android 🤖" ]]; then
+            ls -l target/dx/dx-app/release/android/app
+            ls -l target/dx/dx-app/release/android/app/app
+            ls -l target/dx/dx-app/release/android/app/app/build
+            ls -l target/dx/dx-app/release/android/app/app/build/outputs
+            ls -l target/dx/dx-app/release/android/app/app/build/outputs/apk
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/DxApp_${{ github.ref_name }}.apk
+          fi
