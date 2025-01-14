@@ -41,16 +41,14 @@ jobs:
 
       - name: Build & Deploy 🚀
         run: |
-          dx bundle --release --platform ${{ matrix.platform }} --features bundle
+          dx bundle --release --platform web --features bundle
           cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
 
       - name: Upload web files as artifacts 📦
-        if: ${{ matrix.platform == 'web'}}
         uses: actions/upload-pages-artifact@v3
         with:
           path: target/dx/dx-app/release/web/public/
 
       - name: Deploy to Github Pages 🌐
-        if: ${{ matrix.platform == 'web'}}
         id: deployment
         uses: actions/deploy-pages@v4
