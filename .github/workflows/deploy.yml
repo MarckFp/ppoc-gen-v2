@@ -69,17 +69,19 @@ jobs:
 
       - name: Set Cargo version 📦
         shell: bash
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          mv Cargo.toml Cargo.toml.orig
-          sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.toml.orig >Cargo.toml
-          mv Cargo.lock Cargo.lock.orig
-          sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.lock.orig >Cargo.lock
+        run: sed -i "s/0\\.0\\.0-git/${{ github.ref_name }}/g" Cargo.toml Cargo.lock
 
       - name: Setup Rust 🦀
         if: ${{ matrix.platform != 'web'}}
         run: rustup target add ${{ matrix.target }}
+
+      - name: Cache Rust 🦀
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Setup Java ☕
         if: ${{ matrix.platform == 'android'}}
@@ -94,8 +96,7 @@ jobs:
 
       - name: Setup NDK 🤖
         if: ${{ matrix.platform == 'android'}}
-        run: |
-          sdkmanager "ndk;$NDK_VERSION"
+        run: sdkmanager "ndk;$NDK_VERSION"
 
       - name: Setup OpenSSL 🛠️ for MacOS
         if: matrix.os == 'macos-latest'
@@ -107,17 +108,7 @@ jobs:
 
       - name: Setup dependencies 🛠️ for Linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          sudo apt update
-          sudo apt install libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
+        run: sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev -y
 
       - name: Setup config 🛠️ for Web
         if: ${{ matrix.platform == 'web' }}
@@ -178,7 +169,8 @@ jobs:
       - name: Upload Android
         if: ${{  matrix.name == 'Android 🤖' }}
         run: |
-          ls -l target/dx/dx-app/release/android/app/
+          ls -l target/dx/dx-app/release/android/app/app
+          .target/dx/dx-app/release/android/app/gradlew assembleRelease
           gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/DxApp_${{ github.ref_name }}.apk
 
       - name: Upload iOS
