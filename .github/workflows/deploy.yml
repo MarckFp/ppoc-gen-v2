@@ -80,8 +80,10 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          sed -i "s/0\\.0\\.0-git/${RELEASE_TAG##*/v}/" Cargo.toml
-          sed -i "s/0\\.0\\.0-git/${RELEASE_TAG##*/v}/" Cargo.lock
+          mv Cargo.toml Cargo.toml.orig
+          sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.toml.orig >Cargo.toml
+          mv Cargo.lock Cargo.lock.orig
+          sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.lock.orig >Cargo.lock
 
       - name: Setup Rust Targets 🦀
         if: ${{ matrix.platform != 'web'}}
@@ -100,13 +102,13 @@ jobs:
 
       - name: Setup Dependencies & Configs 🛠️
         run: |
-          if [[ ${{ matrix.platform }} == "android" ]]; then
+          if [[ "${{ matrix.platform }}" == "android" ]]; then
             sdkmanager "ndk;$NDK_VERSION"
           elif [[ ${{ matrix.os }} == "macos-latest" ]]; then
             brew install openssl
-          elif [[ ${{ matrix.os }} == "ubuntu-latest" ]]; then
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev -y
-          elif [[ ${{ matrix.platform }} == "web" ]]; then
+          elif [[ "${{ matrix.platform }}" == "web" ]]; then
             sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
           fi
           cargo install cargo-binstall
@@ -119,13 +121,13 @@ jobs:
       - name: Build & Deploy ${{ matrix.name }} 🚀
         if: ${{  matrix.platform != 'android' }}
         run: |
-          if [[ ${{ matrix.platform }} == "android" ]]; then
+          if [[ "${{ matrix.platform }}" == "android" ]]; then
             dx build --release --platform android
           else
             dx bundle --release --platform ${{ matrix.platform }} --features bundle
           fi
 
-          if [[ ${{ matrix.platform }} == "web" ]]; then
+          if [[ "${{ matrix.platform }}" == "web" ]]; then
             cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
           fi
 
@@ -142,23 +144,24 @@ jobs:
 
 
       - name: Upload Artifacts 📦
+        if: ${{ matrix.platform != 'web'}}
         run: |
-          if [[ ${{ matrix.name }} == "Windows x86_64 🪟" ]]; then
+          if [[ "${{ matrix.name }}" == "Windows x86_64 🪟" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
-          elif [[ ${{ matrix.name }} == "Windows ARM64 🪟" ]]; then
+          elif [[ "${{ matrix.name }}" == "Windows ARM64 🪟" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
-          elif [[ ${{ matrix.name }} == "Linux 🐧" ]]; then
+          elif [[ "${{ matrix.name }}" == "Linux 🐧" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
-          elif [[ ${{ matrix.name }} == "MacOS ARM64 🍏" ]]; then
+          elif [[ "${{ matrix.name }}" == "MacOS ARM64 🍏" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
-          elif [[ ${{ matrix.name }} == "MacOS x86_64 🍏" ]]; then
+          elif [[ "${{ matrix.name }}" == "MacOS x86_64 🍏" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
-          elif [[ ${{ matrix.name }} == "iOS 📱" ]]; then
+          elif [[ "${{ matrix.name }}" == "iOS 📱" ]]; then
             zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
             gh release upload ${{ github.ref_name }} ios.zip
-          elif [[ ${{ matrix.name }} == "Android 🤖" ]]; then
+          elif [[ "${{ matrix.name }}" == "Android 🤖" ]]; then
             ls -l target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/
             gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk
           fi
