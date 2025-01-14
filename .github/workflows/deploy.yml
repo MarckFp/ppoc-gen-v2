@@ -100,7 +100,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Setup Dependencies & Configs 🛠️
-        if: ${{ matrix.os != "windows-latest" }}
+        if: ${{ matrix.os != 'windows-latest' }}
         shell: bash
         run: |
           if [[ ${{ matrix.os }} == "macos-latest" ]]; then
