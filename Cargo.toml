@@ -26,6 +26,3 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
-
-[target.'cfg(target_os = "android")'.dependencies]
-openssl = { version = "0.10", features = ["vendored"] }

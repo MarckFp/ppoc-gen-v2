@@ -7,6 +7,7 @@ on:
 
 env:
   GH_TOKEN: ${{ github.token }}
+  NDK_VERSION: "27.2.12479018"
 
 jobs:
   deploy:
@@ -65,7 +66,7 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Set Cargo.toml version
+      - name: Set Cargo version 📦
         shell: bash
         env:
           RELEASE_TAG: ${{ github.ref_name }}
@@ -76,6 +77,7 @@ jobs:
           sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.lock.orig >Cargo.lock
 
       - name: Setup Rust 🦀
+        if: ${{ matrix.platform != 'web'}}
         run: rustup target add ${{ matrix.target }}
 
       - name: Setup Java ☕
@@ -92,7 +94,7 @@ jobs:
       - name: Setup NDK 🤖
         if: ${{ matrix.platform == 'android'}}
         run: |
-          sdkmanager "ndk;27.2.12479018"
+          sdkmanager "ndk;$NDK_VERSION"
 
       - name: Setup OpenSSL 🛠️ for MacOS
         if: matrix.os == 'macos-latest'
@@ -121,14 +123,14 @@ jobs:
         run: sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
 
       - name: Deploy ${{ matrix.name }}
-        if: ${{  matrix.name != 'Android 🤖' }}
+        if: ${{  matrix.platform != 'android' }}
         run: |
           cargo install cargo-binstall --version 1.10.19
           cargo binstall dioxus-cli -y
           dx bundle --release --platform ${{ matrix.platform }} --features bundle
 
       - name: Deploy ${{ matrix.name }}
-        if: ${{  matrix.name == 'Android 🤖' }}
+        if: ${{  matrix.platform == 'android' }}
         run: |
           cargo install cargo-binstall --version 1.10.19
           cargo binstall dioxus-cli -y
