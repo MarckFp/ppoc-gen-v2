@@ -119,7 +119,6 @@ jobs:
         uses: ilammy/setup-nasm@v1
 
       - name: Build & Deploy ${{ matrix.name }} 🚀
-        if: ${{  matrix.platform != 'android' }}
         run: |
           if [[ "${{ matrix.platform }}" == "android" ]]; then
             dx build --release --platform android
