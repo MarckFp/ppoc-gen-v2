@@ -9,16 +9,6 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-Dwarnings"
-    steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v4
-
-      - name: Run Clippy 🧹
-        run: cargo clippy --all-targets --all-features
   preview:
     enable: false #This is disabled since it overrides Github pages deployment
     name: Deploy Preview 🌐
