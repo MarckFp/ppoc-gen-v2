@@ -67,14 +67,6 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Set Cargo version 📦
-        shell: bash
-        run: sed -i "s/0\\.0\\.0-git/${{ github.ref_name }}/g" Cargo.toml Cargo.lock
-
-      - name: Setup Rust 🦀
-        if: ${{ matrix.platform != 'web'}}
-        run: rustup target add ${{ matrix.target }}
-
       - name: Cache Rust 🦀
         uses: actions/cache@v4
         with:
@@ -82,6 +74,16 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.target }}
           restore-keys: |
             ${{ runner.os }}-cargo-
+
+      - name: Set Cargo version 📦
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: sed -i "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/g" Cargo.toml Cargo.lock
+
+      - name: Setup Rust 🦀
+        if: ${{ matrix.platform != 'web'}}
+        run: rustup target add ${{ matrix.target }}
 
       - name: Setup Java ☕
         if: ${{ matrix.platform == 'android'}}
@@ -169,8 +171,11 @@ jobs:
       - name: Upload Android
         if: ${{  matrix.name == 'Android 🤖' }}
         run: |
+          ls -l target/dx/dx-app/release/android/app
           ls -l target/dx/dx-app/release/android/app/app
-          .target/dx/dx-app/release/android/app/gradlew assembleRelease
+          ls -l target/dx/dx-app/release/android/app/app/build
+          ls -l target/dx/dx-app/release/android/app/app/build/outputs
+          ls -l target/dx/dx-app/release/android/app/app/build/outputs/apk
           gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/DxApp_${{ github.ref_name }}.apk
 
       - name: Upload iOS
