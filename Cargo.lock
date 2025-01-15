@@ -1302,6 +1302,7 @@ version = "0.0.0-git"
 dependencies = [
  "dioxus",
  "dioxus-free-icons",
+ "web-sys",
 ]
 
 [[package]]

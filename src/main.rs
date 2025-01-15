@@ -1,8 +1,8 @@
 #![cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 
 use dioxus::prelude::*;
-
-use components::Navbar;
+// Components
+use components::Layout;
 use views::{Blog, Home};
 
 mod components;
@@ -11,7 +11,7 @@ mod views;
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
-    #[layout(Navbar)]
+    #[layout(Layout)]
     #[route("/")]
     Home {},
     #[route("/blog/:id")]

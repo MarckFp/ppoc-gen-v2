@@ -1,17 +1,17 @@
 use crate::Route;
 use dioxus::prelude::*;
 use dioxus_free_icons::Icon;
+
 //Icons
 use dioxus_free_icons::icons::hi_solid_icons::HiHome;
 use dioxus_free_icons::icons::hi_solid_icons::HiBookOpen;
 
 #[component]
-pub fn Navbar() -> Element {
+pub fn Bottombar() -> Element {
     let nav = navigator();
     let NAV_ELEMENTS = 2;
 
     let grid_class = format!("grid-cols-{}", NAV_ELEMENTS);
-
     rsx! {
         div { id: "navbar", class: "fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-gray-200 dark:bg-gray-700 dark:border-gray-600",
             div { class: "grid h-full max-w-lg {grid_class} mx-auto font-medium",

@@ -14,4 +14,11 @@ script = []
 [bundle]
 identifier = "com.dxapp"
 publisher = "MarckFp"
-icon = ["assets/icons/icon.png"]
+icon = [
+    "assets/icons/favicon-16x16.png",
+    "assets/icons/32x32.png",
+    "assets/icons/128x128.png",
+    "assets/icons/favicon.ico",
+    "assets/icons/icon.ico",
+    "assets/icons/icon.ins"
+]
