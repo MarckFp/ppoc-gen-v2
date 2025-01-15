@@ -19,7 +19,6 @@ enum Route {
 }
 
 fn main() {
-    std::env::set_var("RUST_BACKTRACE", "1");
     dioxus::launch(App);
 }
 
