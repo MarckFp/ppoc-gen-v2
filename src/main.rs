@@ -4,7 +4,6 @@ use dioxus::prelude::*;
 // Components
 use components::Layout;
 use views::{Blog, Home};
-use std::env;
 
 mod components;
 mod views;
@@ -20,20 +19,7 @@ enum Route {
 }
 
 fn main() {
-    let app_env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
-
-    match env::var("SENTRY_DSN_URL") {
-        Ok(val) => {
-            let _guard = sentry::init((val, sentry::ClientOptions {
-                environment: Some(app_env.into()),
-                release: sentry::release_name!(),
-                traces_sample_rate: 1.0,
-                ..Default::default()
-            }));
-        },
-        Err(e) => println!("Error SENTRY_DSN_URL: {}", e),
-    }
-
+    std::env::set_var("RUST_BACKTRACE", "1");
     dioxus::launch(App);
 }
 
