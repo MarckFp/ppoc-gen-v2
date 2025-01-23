@@ -24,7 +24,10 @@ jobs:
 
       - name: Setup Dependencies & Configs 🛠️
         shell: bash
-        run: sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev curl wget file libxdo-dev libayatana-appindicator3-dev librsvg2-dev -y
+        run: |
+          sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev curl wget file libxdo-dev libayatana-appindicator3-dev librsvg2-dev -y
+          npm install -g tailwindcss @tailwindcss/cli
+          npx tailwindcss -i ./input.css -o ./assets/tailwind.css
 
       - name: Run Clippy 🧹
         run: cargo clippy --all-targets --all-features
