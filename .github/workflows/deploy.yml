@@ -107,11 +107,11 @@ jobs:
 
           if [[ "${{ matrix.platform }}" == "web" ]]; then
             sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
-            npx tailwindcss -i ./input.css -o ./assets/tailwind.css
           elif [[ "${{ matrix.platform }}" == "android" ]]; then
             sdkmanager "ndk;$NDK_VERSION"
           fi
 
+          npx tailwindcss -i ./input.css -o ./assets/tailwind.css
           cargo binstall dioxus-cli -y
 
       - name: Setup NASM for Windows 🛠️
