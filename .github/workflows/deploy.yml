@@ -26,55 +26,51 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        # Windows: Currently stopped until Dioxus 0.6.2 is released with a patch to fix Windows binaries
-#          - os: 'windows-latest'
-#            target: 'x86_64-pc-windows-msvc'
-#            name: 'Windows x86_64 🪟'
-#            platform: desktop
-#          - os: 'windows-latest'
-#            target: 'aarch64-pc-windows-msvc'
-#            name: 'Windows ARM64 🪟'
-#            platform: desktop
+        # Windows
+          - os: 'windows-2025'
+            target: 'x86_64-pc-windows-msvc'
+            name: 'Windows x86_64 🪟'
+            platform: desktop
+          - os: 'windows-2025'
+            target: 'aarch64-pc-windows-msvc'
+            name: 'Windows ARM64 🪟'
+            platform: desktop
           # MacOS
-          - os: 'macos-latest'
+          - os: 'macos-15'
             target: 'aarch64-apple-darwin'
             name: 'MacOS ARM64 🍏'
             platform: desktop
-          - os: 'macos-13'
+          - os: 'macos-15'
             target: 'x86_64-apple-darwin'
             name: 'MacOS x86_64 🍏'
             platform: desktop
           # Linux
-          - os: 'ubuntu-latest'
+          - os: 'ubuntu-24.04'
             target: 'x86_64-unknown-linux-gnu'
-            name: 'Linux 🐧'
+            name: 'Linux x86_64 🐧'
+            platform: desktop
+          - os: 'ubuntu-24.04-arm'
+            target: 'aarch64-unknown-linux-gnu'
+            name: 'Linux ARM64 🐧'
             platform: desktop
           # Android
-          - os: 'ubuntu-latest'
+          - os: 'ubuntu-24.04'
             target: 'aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android'
             name: 'Android 🤖'
             platform: android
           # iOS
-          - os: 'macos-latest'
+          - os: 'macos-15'
             target: 'aarch64-apple-ios aarch64-apple-ios-sim'
             name: 'iOS 📱'
             platform: ios
           # Web
-          - os: 'ubuntu-latest'
+          - os: 'ubuntu-24.04'
             target: ''
             name: 'Web 🌐'
             platform: web
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
-
-      - name: Cache Rust 🦀
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ matrix.target }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
 
       - name: Set Cargo version 📦
         shell: bash
@@ -128,8 +124,10 @@ jobs:
         run: |
           if [[ "${{ matrix.platform }}" == "android" ]]; then
             dx build --release --platform android
+          elif [[ "${{ matrix.platform }}" == "ios" ]]; then
+            dx bundle --release --platform ios --features bundle
           else
-            dx bundle --release --platform ${{ matrix.platform }} --features bundle
+            dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
           fi
 
           if [[ "${{ matrix.platform }}" == "web" ]]; then
@@ -156,7 +154,7 @@ jobs:
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
           elif [[ "${{ matrix.name }}" == "Windows ARM64 🪟" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/dx-app.exe
-          elif [[ "${{ matrix.name }}" == "Linux 🐧" ]]; then
+          elif [[ "${{ matrix.name }}" == "Linux x86_64 🐧" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
