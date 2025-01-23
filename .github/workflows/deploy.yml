@@ -98,7 +98,6 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Setup Dependencies & Configs 🛠️
-        if: ${{ matrix.os != 'windows-2025' }}
         shell: bash
         run: |
           if [[ ${{ matrix.os }} == "macos-15" ]]; then
