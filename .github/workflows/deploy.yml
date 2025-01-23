@@ -153,8 +153,8 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.name }}" == "Windows x86_64 🪟" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_en-US.msi
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}-setup.exe
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
 
           elif [[ "${{ matrix.name }}" == "Windows ARM64 🪟" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_arm64_en-US.msi
