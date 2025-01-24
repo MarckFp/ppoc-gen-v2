@@ -21,12 +21,8 @@ fn is_mobile() -> bool {
 #[component]
 pub fn Layout() -> Element {
     if is_mobile() {
-        rsx! {
-            Bottombar {}
-        }
+        //Add Mobile Menu
     } else {
-        rsx! {
-            Sidebar {}
-        }
+        //Add Desktop Menu
     }
 }
