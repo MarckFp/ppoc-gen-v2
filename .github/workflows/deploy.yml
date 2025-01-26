@@ -126,7 +126,7 @@ jobs:
             dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
           elif [[ "${{ matrix.platform }}" == "android" ]]; then
             dx build --release --platform android
-            dx bundle --release --platform android --featured bundle
+            dx bundle --release --platform android --features bundle
           else
             dx bundle --release --platform ${{ matrix.platform }} --features bundle
           fi
