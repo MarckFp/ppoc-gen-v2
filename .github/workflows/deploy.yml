@@ -124,6 +124,9 @@ jobs:
         run: |
           if [[ "${{ matrix.platform }}" == "desktop" ]]; then
             dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
+          elif [[ "${{ matrix.platform }}" == "android" ]]; then
+            dx build --release --platform android
+            dx bundle --release --platform android --featured bundle
           else
             dx bundle --release --platform ${{ matrix.platform }} --features bundle
           fi
@@ -178,4 +181,5 @@ jobs:
 
           elif [[ "${{ matrix.name }}" == "Android 🤖" ]]; then
             gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/app-debug.apk
+            gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp-aarch64.aab
           fi
