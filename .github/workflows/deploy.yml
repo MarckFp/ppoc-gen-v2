@@ -122,7 +122,7 @@ jobs:
       - name: Build & Deploy ${{ matrix.name }} 🚀
         shell: bash
         run: |
-          if [[ "${{ matrix.platform }}" == "desktp" ]]; then
+          if [[ "${{ matrix.platform }}" == "desktop" ]]; then
             dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
           else
             dx bundle --release --platform ${{ matrix.platform }} --features bundle
