@@ -2,8 +2,6 @@ use dioxus::prelude::*;
 use web_sys::window;
 
 //Components
-use crate::components::Sidebar;
-use crate::components::Bottombar;
 
 fn is_mobile() -> bool {
     let user_agent_check = window()
@@ -18,7 +16,7 @@ fn is_mobile() -> bool {
     user_agent_check || size_check
 }
 
-#[component]
+/*#[component]
 pub fn Layout() -> Element {
     if is_mobile() {
         //Add Mobile Menu
@@ -26,3 +24,4 @@ pub fn Layout() -> Element {
         //Add Desktop Menu
     }
 }
+*/
