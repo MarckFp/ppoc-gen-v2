@@ -2,7 +2,6 @@
 
 use dioxus::prelude::*;
 // Components
-use components::Layout;
 use views::{Blog, Home};
 
 mod components;
@@ -11,7 +10,6 @@ mod views;
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
-//    #[layout(Layout)]
     #[route("/")]
     Home {},
     #[route("/blog/:id")]
