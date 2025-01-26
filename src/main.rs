@@ -11,7 +11,7 @@ mod views;
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
-    #[layout(Layout)]
+//    #[layout(Layout)]
     #[route("/")]
     Home {},
     #[route("/blog/:id")]
