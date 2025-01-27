@@ -49,7 +49,7 @@ jobs:
             target: 'x86_64-unknown-linux-gnu'
             name: 'Linux x86_64 🐧'
             platform: desktop
-          - os: 'ubuntu-24.04'
+          - os: 'ubuntu-24.04-arm'
             target: 'aarch64-unknown-linux-gnu'
             name: 'Linux ARM64 🐧'
             platform: desktop
@@ -106,25 +106,25 @@ jobs:
           fi
 
           case "${{ matrix.os }}" in
-            ubuntu-24.04)
+            "ubuntu-24.04")
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
               mv tailwindcss-linux-x64 tailwindcss
               chmod +x tailwindcss
               ;;
 
-            ubuntu-24.04-arm)
+            "ubuntu-24.04-arm")
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64
               mv tailwindcss-linux-arm64 tailwindcss
               chmod +x tailwindcss
               ;;
 
-            macos-15)
+            "macos-15")
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
               mv tailwindcss-macos-arm64 tailwindcss
               chmod +x tailwindcss
               ;;
 
-            windows-2025)
+            "windows-2025")
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-windows-x64
               mv tailwindcss-windows-x64 tailwindcss
               chmod +x tailwindcss
