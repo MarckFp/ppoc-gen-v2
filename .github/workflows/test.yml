@@ -7,7 +7,7 @@ on:
 
 jobs:
   Lint:
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     env:
       RUSTFLAGS: "-Dwarnings"
     steps:
@@ -25,9 +25,10 @@ jobs:
       - name: Setup Dependencies & Configs 🛠️
         shell: bash
         run: |
-          sudo apt update -y && sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev curl wget file libxdo-dev libayatana-appindicator3-dev librsvg2-dev -y
-          npm install -g tailwindcss @tailwindcss/cli
-          npx tailwindcss -i ./input.css -o ./assets/tailwind.css
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+          mv tailwindcss-macos-arm64 tailwindcss
+          chmod +x tailwindcss
+          ./tailwindcss -i ./input.css -o ./assets/tailwind.css
 
       - name: Run Clippy 🧹
         run: cargo clippy --all-targets --all-features

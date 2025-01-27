@@ -125,8 +125,8 @@ jobs:
               ;;
 
             "windows-2025")
-              curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-windows-x64
-              mv tailwindcss-windows-x64 tailwindcss
+              curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-windows-x64.exe
+              mv tailwindcss-windows-x64.exe tailwindcss
               chmod +x tailwindcss
               ;;
           esac
