@@ -64,7 +64,7 @@ jobs:
             name: 'iOS 📱'
             platform: ios
           # Web
-          - os: 'macos-15'
+          - os: 'ubuntu-24.04'
             target: ''
             name: 'Web 🌐'
             platform: web
