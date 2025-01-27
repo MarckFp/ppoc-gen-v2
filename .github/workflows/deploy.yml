@@ -27,46 +27,46 @@ jobs:
       matrix:
         include:
         # Windows
-          - os: 'windows-2025'
+          - name: 'Windows x86_64 🪟'
+            os: 'windows-2025'
             target: 'x86_64-pc-windows-msvc'
-            name: 'Windows x86_64 🪟'
             platform: desktop
-          - os: 'windows-2025'
+          - name: 'Windows ARM64 🪟'
+            os: 'windows-2025'
             target: 'aarch64-pc-windows-msvc'
-            name: 'Windows ARM64 🪟'
             platform: desktop
           # MacOS
-          - os: 'macos-15'
+          - name: 'MacOS ARM64 🍏'
+            os: 'macos-15'
             target: 'aarch64-apple-darwin'
-            name: 'MacOS ARM64 🍏'
             platform: desktop
-          - os: 'macos-15'
+          - name: 'MacOS x86_64 🍏'
+            os: 'macos-15'
             target: 'x86_64-apple-darwin'
-            name: 'MacOS x86_64 🍏'
             platform: desktop
           # Linux
-          - os: 'ubuntu-24.04'
+          - name: 'Linux x86_64 🐧'
+            os: 'ubuntu-24.04'
             target: 'x86_64-unknown-linux-gnu'
-            name: 'Linux x86_64 🐧'
             platform: desktop
-          - os: 'ubuntu-24.04-arm'
+          - name: 'Linux ARM64 🐧'
+            os: 'ubuntu-24.04-arm'
             target: 'aarch64-unknown-linux-gnu'
-            name: 'Linux ARM64 🐧'
             platform: desktop
           # Android
-          - os: 'macos-15'
+          - name: 'Android 🤖'
+            os: 'macos-15'
             target: 'aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android'
-            name: 'Android 🤖'
             platform: android
           # iOS
-          - os: 'macos-15'
+          - name: 'iOS 📱'
+            os: 'macos-15'
             target: 'aarch64-apple-ios aarch64-apple-ios-sim'
-            name: 'iOS 📱'
             platform: ios
           # Web
-          - os: 'ubuntu-24.04'
+          - name: 'Web 🌐'
+            os: 'ubuntu-24.04'
             target: ''
-            name: 'Web 🌐'
             platform: web
     steps:
       - name: Checkout 🛎️
@@ -101,18 +101,16 @@ jobs:
       - name: Setup Dependencies & Configs 🛠️
         shell: bash
         run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-24.04" || "${{ matrix.os }}" == "ubuntu-24.04-arm" ]]; then
-            sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
-          fi
-
           case "${{ matrix.os }}" in
             "ubuntu-24.04")
+              sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
               mv tailwindcss-linux-x64 tailwindcss
               chmod +x tailwindcss
               ;;
 
             "ubuntu-24.04-arm")
+              sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64
               mv tailwindcss-linux-arm64 tailwindcss
               chmod +x tailwindcss
@@ -131,12 +129,15 @@ jobs:
               ;;
           esac
 
+          case "${{ matrix.platform }}" in
+            "web")
+              sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
+              ;;
 
-          if [[ "${{ matrix.platform }}" == "web" ]]; then
-            sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
-          elif [[ "${{ matrix.platform }}" == "android" ]]; then
-            sdkmanager "ndk;$NDK_VERSION"
-          fi
+            "android")
+              sdkmanager "ndk;$NDK_VERSION"
+              ;;
+          esac
 
           ./tailwindcss -i ./input.css -o ./assets/tailwind.css
           cargo binstall dioxus-cli -y
@@ -148,14 +149,25 @@ jobs:
       - name: Build & Deploy ${{ matrix.name }} 🚀
         shell: bash
         run: |
-          if [[ "${{ matrix.platform }}" == "desktop" ]]; then
-            dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
-          elif [[ "${{ matrix.platform }}" == "android" ]]; then
-            dx build --release --platform android
-            dx bundle --release --platform android --features bundle
-          else
-            dx bundle --release --platform ${{ matrix.platform }} --features bundle
-          fi
+          case "${{ matrix.platform }}" in
+            "desktop")
+              dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
+              ;;
+
+            "android")
+              dx build --release --platform android
+              dx bundle --release --platform android --features bundle
+              ;;
+
+            "ios")
+              dx build --release --platform ios
+              dx bundle --release --platform ios --features bundle
+              ;;
+
+            *)
+              dx bundle --release --platform ${{ matrix.platform }} --features bundle
+              ;;
+          esac
 
           if [[ "${{ matrix.platform }}" == "web" ]]; then
             cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
@@ -172,40 +184,48 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-
       - name: Upload Artifacts 📦
         if: ${{ matrix.platform != 'web'}}
         shell: bash
         run: |
-          if [[ "${{ matrix.name }}" == "Windows x86_64 🪟" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi \
-              target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
+          case "${{ matrix.name }}" in
+            "Windows x86_64 🪟")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi \
+                target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
+              ;;
 
-          elif [[ "${{ matrix.name }}" == "Windows ARM64 🪟" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_arm64_en-US.msi \
-              target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
+            "Windows ARM64 🪟")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_arm64_en-US.msi \
+                target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
+              ;;
 
-          elif [[ "${{ matrix.name }}" == "Linux x86_64 🐧" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb \
-              target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm \
-              target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
+            "Linux x86_64 🐧")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb \
+                target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm \
+                target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
+              ;;
 
-          elif [[ "${{ matrix.name }}" == "Linux ARM64 🐧" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb \
-              target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.aarch64.rpm \
-              target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
+            "Linux ARM64 🐧")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb \
+                target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.aarch64.rpm \
+                target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
+              ;;
 
-          elif [[ "${{ matrix.name }}" == "MacOS x86_64 🍏" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
-          
-          elif [[ "${{ matrix.name }}" == "MacOS ARM64 🍏" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
+            "MacOS x86_64 🍏")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
+              ;;
 
-          elif [[ "${{ matrix.name }}" == "iOS 📱" ]]; then
-            zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
-            gh release upload ${{ github.ref_name }} ios.zip
+            "MacOS ARM64 🍏")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
+              ;;
 
-          elif [[ "${{ matrix.name }}" == "Android 🤖" ]]; then
-            gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/app-debug.apk \
-              target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp-aarch64.aab
-          fi
+            "iOS 📱")
+              zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
+              gh release upload ${{ github.ref_name }} ios.zip
+              ;;
+
+            "Android 🤖")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/app-debug.apk \
+                target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp-aarch64.aab
+              ;;
+          esac
