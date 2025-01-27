@@ -28,3 +28,8 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
+
+[profile.release]
+lto = "fat"
+opt-level = "z"
+panic = "abort"
