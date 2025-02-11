@@ -193,6 +193,10 @@ jobs:
         shell: bash
         run: |
           case "${{ matrix.name }}" in
+            "Windows x86 🪟")
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x86_en-US.msi \
+                target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x86-setup.exe
+              ;;
             "Windows x64 🪟")
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi \
                 target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
