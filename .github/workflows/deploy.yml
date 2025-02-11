@@ -50,7 +50,7 @@ jobs:
             platform: desktop
           # Linux
           - name: 'Linux x86 🐧'
-            os: 'windows-2025'
+            os: 'ubuntu-24.04'
             target: 'i686-unknown-linux-gnu'
             platform: desktop          
           - name: 'Linux x64 🐧'
