@@ -27,7 +27,11 @@ jobs:
       matrix:
         include:
         # Windows
-          - name: 'Windows x86_64 🪟'
+          - name: 'Windows x86 🪟'
+            os: 'windows-2025'
+            target: 'i686-pc-windows-msvc'
+            platform: desktop
+          - name: 'Windows x64 🪟'
             os: 'windows-2025'
             target: 'x86_64-pc-windows-msvc'
             platform: desktop
@@ -36,16 +40,20 @@ jobs:
             target: 'aarch64-pc-windows-msvc'
             platform: desktop
           # MacOS
+          - name: 'MacOS x64 🍏'
+            os: 'macos-15'
+            target: 'x86_64-apple-darwin'
+            platform: desktop          
           - name: 'MacOS ARM64 🍏'
             os: 'macos-15'
             target: 'aarch64-apple-darwin'
             platform: desktop
-          - name: 'MacOS x86_64 🍏'
-            os: 'macos-15'
-            target: 'x86_64-apple-darwin'
-            platform: desktop
           # Linux
-          - name: 'Linux x86_64 🐧'
+          - name: 'Linux x86 🐧'
+            os: 'windows-2025'
+            target: 'i686-unknown-linux-gnu'
+            platform: desktop          
+          - name: 'Linux x64 🐧'
             os: 'ubuntu-24.04'
             target: 'x86_64-unknown-linux-gnu'
             platform: desktop
@@ -142,10 +150,6 @@ jobs:
           ./tailwindcss -i ./input.css -o ./assets/tailwind.css
           cargo binstall dioxus-cli -y
 
-      - name: Setup NASM for Windows 🛠️
-        if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
-        uses: ilammy/setup-nasm@v1
-
       - name: Build & Deploy ${{ matrix.name }} 🚀
         shell: bash
         run: |
@@ -189,7 +193,7 @@ jobs:
         shell: bash
         run: |
           case "${{ matrix.name }}" in
-            "Windows x86_64 🪟")
+            "Windows x64 🪟")
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi \
                 target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
               ;;
@@ -199,7 +203,7 @@ jobs:
                 target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
               ;;
 
-            "Linux x86_64 🐧")
+            "Linux x64 🐧")
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb \
                 target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm \
                 target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
@@ -211,7 +215,7 @@ jobs:
                 target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
               ;;
 
-            "MacOS x86_64 🍏")
+            "MacOS x64 🍏")
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
               ;;
 
