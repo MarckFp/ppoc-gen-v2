@@ -116,7 +116,7 @@ jobs:
               if [[ "${{ matrix.target }}" == "i686-unknown-linux-gnu" ]]; then
                 sudo dpkg --add-architecture i386
                 sudo apt update -y
-                sudo apt install gobject-introspection:i386 gobject-introspection-bin:i386 gobject-introspection-bin-linux:i386 build-essential libwebkit2gtk-4.1-dev:i386 libxdo-dev libayatana-appindicator3-dev librsvg2-dev:i386 gcc-multilib g++-multilib libc6:i386 libglib2.0-dev:i386 libgtk-3-dev:i386 -y
+                sudo apt install gobject-introspection:i386 gobject-introspection-bin:i386 gobject-introspection-bin-linux:i386 build-essential:i386 libwebkit2gtk-4.1-dev:i386 libxdo-dev libayatana-appindicator3-dev librsvg2-dev:i386 gcc-multilib:i386 g++-multilib:i386 libc6:i386 libglib2.0-dev:i386 libgtk-3-dev:i386 -y
                 export PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
               else
                 sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
