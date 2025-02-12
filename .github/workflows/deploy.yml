@@ -4,11 +4,10 @@ on:
   push:
     tags:
       - '*.*.*'
-
+#For NDK see: https://developer.android.com/ndk/downloads
 env:
   GH_TOKEN: ${{ github.token }}
-  NDK_VERSION: "27.2.12479018"
-  APP_ENV: "production"
+  NDK_VERSION: "28.0.13004108"
 
 jobs:
   deploy:
@@ -48,11 +47,7 @@ jobs:
             os: 'macos-15'
             target: 'aarch64-apple-darwin'
             platform: desktop
-          # Linux
-          - name: 'Linux x86 🐧'
-            os: 'ubuntu-24.04'
-            target: 'i686-unknown-linux-gnu'
-            platform: desktop          
+          # Linux      
           - name: 'Linux x64 🐧'
             os: 'ubuntu-24.04'
             target: 'x86_64-unknown-linux-gnu'
@@ -113,41 +108,26 @@ jobs:
 
           case "${{ matrix.os }}" in
             "ubuntu-24.04")
-              if [[ "${{ matrix.target }}" == "i686-unknown-linux-gnu" ]]; then
-                sudo dpkg --add-architecture i386
-                sudo apt update -y
-                sudo apt install gcc-multilib g++-multilib -y
-                sudo apt install libc6:i386 libglib2.0-dev:i386 libgtk-3-dev:i386 -y
-                sudo apt install gobject-introspection:i386 gobject-introspection-bin:i386 -y
-                sudo apt install build-essential:i386 libwebkit2gtk-4.1-dev:i386 libxdo-dev libayatana-appindicator3-dev librsvg2-dev:i386 -y
-                export PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
-              else
-                sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
-              fi
-              curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
-              mv tailwindcss-linux-x64 tailwindcss
-              chmod +x tailwindcss
+              sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
+              export TAILWIND_NAME=tailwindcss-linux-x64
               ;;
 
             "ubuntu-24.04-arm")
               sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
-              curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64
-              mv tailwindcss-linux-arm64 tailwindcss
-              chmod +x tailwindcss
+              export TAILWIND_NAME=tailwindcss-linux-arm64
               ;;
 
             "macos-15")
-              curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
-              mv tailwindcss-macos-arm64 tailwindcss
-              chmod +x tailwindcss
+              export TAILWIND_NAME=tailwindcss-macos-arm64
               ;;
 
             "windows-2025")
-              curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-windows-x64.exe
-              mv tailwindcss-windows-x64.exe tailwindcss
-              chmod +x tailwindcss
+              export TAILWIND_NAME=tailwindcss-windows-x64.exe
               ;;
           esac
+
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TAILWIND_NAME
+          chmod +x $TAILWIND_NAME
 
           case "${{ matrix.platform }}" in
             "web")
@@ -159,7 +139,7 @@ jobs:
               ;;
           esac
 
-          ./tailwindcss -i ./input.css -o ./assets/tailwind.css
+          ./$TAILWIND_NAME -i ./input.css -o ./assets/tailwind.css
           cargo binstall dioxus-cli -y
 
       - name: Build & Deploy ${{ matrix.name }} 🚀
