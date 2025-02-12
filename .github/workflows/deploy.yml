@@ -109,7 +109,7 @@ jobs:
       - name: Setup Dependencies & Configs 🛠️
         shell: bash
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -y
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -y | sh
 
           case "${{ matrix.os }}" in
             "ubuntu-24.04")
