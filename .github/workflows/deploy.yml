@@ -111,7 +111,13 @@ jobs:
         run: |
           case "${{ matrix.os }}" in
             "ubuntu-24.04")
-              sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
+              if [[ "${{ matrix.target }}" == "i686-unknown-linux-gnu" ]]; then
+                sudo dpkg --add-architecture i386
+                sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev gcc-multilib g++-multilib libc6:i386 libglib2.0-dev:i386 libgtk-3-dev:i386 -y
+                export PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
+              else
+                sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
+              fi
               curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
               mv tailwindcss-linux-x64 tailwindcss
               chmod +x tailwindcss
@@ -164,7 +170,6 @@ jobs:
               ;;
 
             "ios")
-              dx build --release --platform ios
               dx bundle --release --platform ios --features bundle
               ;;
 
