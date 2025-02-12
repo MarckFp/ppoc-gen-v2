@@ -175,12 +175,18 @@ jobs:
           path: target/dx/dx-app/release/web/public/
 
       - name: Deploy Github Pages 🌐
-        if: ${{ matrix.platform == 'web'}}
+        if: ${{ matrix.platform == 'web' }}
         id: deployment
         uses: actions/deploy-pages@v4
+      
+      - name: Install UPX
+        if: ${{ matrix.platform == 'desktop' }}
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          install-only: true
 
       - name: Upload Artifacts 📦
-        if: ${{ matrix.platform != 'web'}}
+        if: ${{ matrix.platform != 'web' }}
         shell: bash
         run: |
           case "${{ matrix.name }}" in
