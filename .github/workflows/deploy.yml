@@ -168,6 +168,13 @@ jobs:
             cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
           fi
 
+      - name: Optimize Wasm
+        if: ${{ matrix.platform == 'web'}}
+        uses: NiklasEi/wasm-opt-action@v2
+        with:
+          file: target/dx/dx-app/release/web/public/wasm/*.wasm
+          optimize_all: true
+
       - name: Upload Github Pages 📤
         if: ${{ matrix.platform == 'web'}}
         uses: actions/upload-pages-artifact@v3
@@ -191,42 +198,56 @@ jobs:
         run: |
           case "${{ matrix.name }}" in
             "Windows x86 🪟")
+              upx --best target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x86_en-US.msi
+              upx --best target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x86-setup.exe
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x86_en-US.msi \
                 target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x86-setup.exe
               ;;
             "Windows x64 🪟")
+              upx --best target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi
+              upx --best target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi \
                 target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
               ;;
 
             "Windows ARM64 🪟")
+              upx --best target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_arm64_en-US.msi
+              upx --best target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_arm64_en-US.msi \
                 target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
               ;;
 
             "Linux x64 🐧")
+              upx --best target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
+              upx --best target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm
+              upx --best target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb \
                 target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm \
                 target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
               ;;
 
             "Linux ARM64 🐧")
+              upx --best target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
+              upx --best target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.aarch64.rpm
+              upx --best target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb \
                 target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.aarch64.rpm \
                 target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
               ;;
 
             "MacOS x64 🍏")
+              upx --best target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
               ;;
 
             "MacOS ARM64 🍏")
+              upx --best target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
               ;;
 
             "iOS 📱")
               zip -r ios.zip target/dx/dx-app/release/ios/DxApp.app
-              gh release upload ${{ github.ref_name }} ios.zip
+              gh release upload ${{ github.ref_name }} DxApp_${{ github.ref_name }}_ios.zip
               ;;
 
             "Android 🤖")
