@@ -116,6 +116,7 @@ jobs:
 
               ARCH=$(uname -m)
               [[ "$ARCH" == "aarch64" ]] && TAILWIND_NAME="tailwindcss-linux-arm64" || TAILWIND_NAME="tailwindcss-linux-x64"
+              ;;
 
             "macOS")
               TAILWIND_NAME="tailwindcss-macos-arm64"
