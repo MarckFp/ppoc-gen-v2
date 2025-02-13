@@ -69,7 +69,7 @@ jobs:
           # Web
           - name: 'Web 🌐'
             os: 'ubuntu-24.04'
-            target: ''
+            target: 'wasm32-unknown-unknown'
             platform: web
     steps:
       - name: Checkout 🛎️
@@ -84,7 +84,6 @@ jobs:
           sed "s/0\\.0\\.0-git/${RELEASE_TAG##*\/v}/" Cargo.toml.orig >Cargo.toml
 
       - name: Setup Rust Targets 🦀
-        if: ${{ matrix.platform != 'web'}}
         run: rustup target add ${{ matrix.target }}
 
       - name: Setup Java ☕
@@ -106,27 +105,28 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-          case "${{ matrix.os }}" in
-            "ubuntu-24.04")
-              sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
-              export TAILWIND_NAME=tailwindcss-linux-x64
+          case "${{ runner.os }}" in
+            "Linux")
+              sudo apt update -y 
+              sudo apt install build-essential librsvg2-dev -y
+
+              if [[ "${{ matrix.platform }}" != 'web' ]]; then
+                sudo apt install libwebkit2gtk-4.1-dev libxdo-dev libglib2.0-dev libayatana-appindicator3-dev -y
+              fi
+
+              ARCH=$(uname -m)
+              [[ "$ARCH" == "aarch64" ]] && TAILWIND_NAME="tailwindcss-linux-arm64" || TAILWIND_NAME="tailwindcss-linux-x64"
+
+            "macOS")
+              TAILWIND_NAME="tailwindcss-macos-arm64"
               ;;
 
-            "ubuntu-24.04-arm")
-              sudo apt update -y && sudo apt install build-essential libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev libglib2.0-dev -y
-              export TAILWIND_NAME=tailwindcss-linux-arm64
-              ;;
-
-            "macos-15")
-              export TAILWIND_NAME=tailwindcss-macos-arm64
-              ;;
-
-            "windows-2025")
-              export TAILWIND_NAME=tailwindcss-windows-x64.exe
+            "Windows")
+              TAILWIND_NAME="tailwindcss-windows-x64.exe"
               ;;
           esac
 
-          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TAILWIND_NAME
+          curl -sLO "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TAILWIND_NAME"
           chmod +x $TAILWIND_NAME
 
           case "${{ matrix.platform }}" in
