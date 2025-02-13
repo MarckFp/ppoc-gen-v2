@@ -42,7 +42,6 @@ fn App() -> Element {
         document::Link { rel: "manifest", href: asset!("/assets/manifest.json") }
         document::Stylesheet { href: asset!("/assets/styling/main.css") }
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
-        document::Stylesheet { href: "https://cdn.jsdelivr.net/npm/flowbite@3.0.0/dist/flowbite.min.css" }
 
         Router::<Route> {}
     }

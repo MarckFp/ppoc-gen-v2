@@ -1,5 +1,7 @@
 [application]
 name = "DXApp"
+default_platform = "web"
+hot_reload = true
 
 [web.app]
 title = "DXApp"
@@ -11,10 +13,24 @@ script = []
 [web.resource.dev]
 script = []
 
-[bundle]
-identifier = "com.dxapp"
+[web.wasm_opt]
+level = "z"
+
+[web.watcher]
+index_on_404 = true
+watch_path = ["src"]
+
+[bundler]
+identifier = "io.github.dx-app"
 publisher = "MarckFp"
+copyright = ""
+category = "Utility"
+short_description = "An amazing dioxus application."
+long_description = """
+An amazing dioxus application.
+"""
 icon = [
+    "icons/icon.png",
     "assets/icons/128x128.png",
     "assets/icons/128x128@2x.png",
     "assets/icons/32x32.png",

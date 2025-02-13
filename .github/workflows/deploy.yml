@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - '*.*.*'
+
 #For NDK see: https://developer.android.com/ndk/downloads
 env:
   GH_TOKEN: ${{ github.token }}
@@ -42,12 +43,12 @@ jobs:
           - name: 'MacOS x64 🍏'
             os: 'macos-15'
             target: 'x86_64-apple-darwin'
-            platform: desktop          
+            platform: desktop
           - name: 'MacOS ARM64 🍏'
             os: 'macos-15'
             target: 'aarch64-apple-darwin'
             platform: desktop
-          # Linux      
+          # Linux
           - name: 'Linux x64 🐧'
             os: 'ubuntu-24.04'
             target: 'x86_64-unknown-linux-gnu'
@@ -169,7 +170,7 @@ jobs:
             cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
           fi
 
-      - name: Optimize Wasm
+      - name: Optimize Wasm ⚡
         if: ${{ matrix.platform == 'web'}}
         uses: NiklasEi/wasm-opt-action@v2
         with:
@@ -188,7 +189,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
       
-      - name: Install UPX
+      - name: Install UPX 🛠️
         if: ${{ matrix.platform == 'desktop' && matrix.name != 'MacOS x64 🍏' && matrix.name != 'MacOS ARM64 🍏'}}
         uses: crazy-max/ghaction-upx@v3
         with:
