@@ -68,7 +68,7 @@ jobs:
             platform: ios
           # Web
           - name: 'Web 🌐'
-            os: 'macos-15'
+            os: 'ubuntu-24.04'
             target: ''
             platform: web
     steps:
@@ -131,9 +131,7 @@ jobs:
 
           case "${{ matrix.platform }}" in
             "web")
-              sed -i '' '/^\[web\.app\]$/a\
-              base_path = "dx-app"
-              ' Dioxus.toml
+              sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
               ;;
 
             "android")
