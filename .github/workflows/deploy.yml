@@ -132,7 +132,8 @@ jobs:
           case "${{ matrix.platform }}" in
             "web")
               sed -i '' '/^\[web\.app\]$/a\
-              base_path = "dx-app"' Dioxus.toml
+              base_path = "dx-app"
+              ' Dioxus.toml
               ;;
 
             "android")
@@ -217,7 +218,6 @@ jobs:
 
             "Linux x64 🐧")
               upx --best target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
-              upx --best target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb \
                 target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm \
                 target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
@@ -225,7 +225,6 @@ jobs:
 
             "Linux ARM64 🐧")
               upx --best target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
-              upx --best target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb
               gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb \
                 target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.aarch64.rpm \
                 target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
