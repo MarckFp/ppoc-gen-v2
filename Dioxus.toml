@@ -46,7 +46,7 @@ icon = [
 # Windows
 #------------------------------------------
 [bundle.windows]
-icon_path = "icons/windows/"
+icon_path = "icons/icon.ico"
 allow_downgrades = false
 tsp = false
 webview_install_mode = {DownloadBootstrapper = {silent = true}}
