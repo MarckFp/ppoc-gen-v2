@@ -149,20 +149,20 @@ jobs:
         run: |
           case "${{ matrix.platform }}" in
             "desktop")
-              dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
+              dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle --profile release
               ;;
 
             "android")
-              dx build --release --platform android
-              dx bundle --release --platform android --features bundle
+              dx build --release --platform android --profile release
+              dx bundle --release --platform android --features bundle --profile release
               ;;
 
             "ios")
-              dx bundle --release --platform ios --features bundle
+              dx bundle --release --platform ios --features bundle --profile release
               ;;
 
             *)
-              dx bundle --release --platform ${{ matrix.platform }} --features bundle
+              dx bundle --release --platform ${{ matrix.platform }} --features bundle --profile release
               ;;
           esac
 

@@ -5,21 +5,20 @@ hot_reload = true
 
 [web.app]
 title = "DXApp"
-
 [web.resource]
 style = []
 script = []
-
 [web.resource.dev]
 script = []
-
 [web.wasm_opt]
 level = "z"
-
 [web.watcher]
 index_on_404 = true
 watch_path = ["src"]
 
+#------------------------------------------
+# Bundler
+#------------------------------------------
 [bundle]
 identifier = "io.github.dx-app"
 publisher = "MarckFp"
@@ -30,62 +29,36 @@ long_description = """
 An amazing dioxus application.
 """
 icon = [
-    "icons/icon.ico",
     "assets/icons/128x128.png",
     "assets/icons/128x128@2x.png",
     "assets/icons/32x32.png",
-    "assets/icons/Square107x107Logo.png",
-    "assets/icons/Square142x142Logo.png",
-    "assets/icons/Square150x150Logo.png",
-    "assets/icons/Square284x284Logo.png",
-    "assets/icons/Square30x30Logo.png",
-    "assets/icons/Square310x310Logo.png",
-    "assets/icons/Square44x44Logo.png",
-    "assets/icons/Square71x71Logo.png",
-    "assets/icons/Square89x89Logo.png",
-    "assets/icons/StoreLogo.png",
     "assets/icons/android-chrome-192x192.png",
     "assets/icons/android-chrome-512x512.png",
     "assets/icons/apple-touch-icon.png",
     "assets/icons/favicon-16x16.png",
     "assets/icons/favicon-32x32.png",
     "assets/icons/favicon.ico",
-    "assets/icons/icon.icns",
     "assets/icons/icon.ico",
-    "assets/icons/icon.png",
-    # iOS
-    "assets/icons/ios/AppIcon-20x20@1x.png",
-    "assets/icons/ios/AppIcon-20x20@2x-1.png",
-    "assets/icons/ios/AppIcon-20x20@2x.png",
-    "assets/icons/ios/AppIcon-20x20@3x.png",
-    "assets/icons/ios/AppIcon-29x29@1x.png",
-    "assets/icons/ios/AppIcon-29x29@2x-1.png",
-    "assets/icons/ios/AppIcon-29x29@2x.png",
-    "assets/icons/ios/AppIcon-29x29@3x.png",
-    "assets/icons/ios/AppIcon-40x40@1x.png",
-    "assets/icons/ios/AppIcon-40x40@2x-1.png",
-    "assets/icons/ios/AppIcon-40x40@2x.png",
-    "assets/icons/ios/AppIcon-40x40@3x.png",
-    "assets/icons/ios/AppIcon-512@2x.png",
-    "assets/icons/ios/AppIcon-60x60@2x.png",
-    "assets/icons/ios/AppIcon-60x60@3x.png",
-    "assets/icons/ios/AppIcon-76x76@1x.png",
-    "assets/icons/ios/AppIcon-76x76@2x.png",
-    "assets/icons/ios/AppIcon-83.5x83.5@2x.png",
-    # Android
-    "assets/icons/android/mipmap-hdpi/ic_launcher_round.png",
-    "assets/icons/android/mipmap-hdpi/ic_launcher.png",
-    "assets/icons/android/mipmap-hdpi/ic_launcher_foreground.png",
-    "assets/icons/android/mipmap-mdpi/ic_launcher_round.png",
-    "assets/icons/android/mipmap-mdpi/ic_launcher.png",
-    "assets/icons/android/mipmap-mdpi/ic_launcher_foreground.png",
-    "assets/icons/android/mipmap-xhdpi/ic_launcher_round.png",
-    "assets/icons/android/mipmap-xhdpi/ic_launcher.png",
-    "assets/icons/android/mipmap-xhdpi/ic_launcher_foreground.png",
-    "assets/icons/android/mipmap-xxhdpi/ic_launcher_round.png",
-    "assets/icons/android/mipmap-xxhdpi/ic_launcher.png",
-    "assets/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png",
-    "assets/icons/android/mipmap-xxxhdpi/ic_launcher_round.png",
-    "assets/icons/android/mipmap-xxxhdpi/ic_launcher.png",
-    "assets/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png"
+    "assets/icons/icon.png"
 ]
+
+#------------------------------------------
+# Windows
+#------------------------------------------
+[bundle.windows]
+icon_path = "icons/windows/"
+allow_downgrades = false
+tsp = false
+webview_install_mode = {DownloadBootstrapper = {silent = true}}
+silent = true
+[bundle.windows.nsis]
+installer_icon = "icons/icon.ico"
+install_mode = "Both"
+display_language_selector = false
+
+#------------------------------------------
+# MacOS
+#------------------------------------------
+[bundle.macos]
+hardened_runtime = true
+[bundle.macos.files]
