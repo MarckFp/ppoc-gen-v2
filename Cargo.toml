@@ -2,7 +2,7 @@
 name = "dx-app"
 version = "0.0.0-git"
 authors = ["Marcos Fernández <marcosfernandezperez9@gmail.com>"]
-edition = "2021"
+edition = "2024"
 publish = false
 
 [dependencies]

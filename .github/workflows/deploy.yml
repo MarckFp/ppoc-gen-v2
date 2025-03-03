@@ -240,8 +240,10 @@ jobs:
               ;;
 
             "iOS 📱")
-              zip -r DxApp_${{ github.ref_name }}_ios.zip target/dx/dx-app/release/ios/DxApp.app
-              gh release upload ${{ github.ref_name }} DxApp_${{ github.ref_name }}_ios.zip
+              mkdir Payload
+              mv target/dx/dx-app/release/ios/DxApp.app Payload/
+              zip -r DxApp_${{ github.ref_name }}.ipa Payload
+              gh release upload ${{ github.ref_name }} DxApp_${{ github.ref_name }}.ipa
               ;;
 
             "Android 🤖")
