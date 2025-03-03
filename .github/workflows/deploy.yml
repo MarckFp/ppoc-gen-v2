@@ -244,6 +244,7 @@ jobs:
               mv target/dx/dx-app/release/ios/DxApp.app Payload/
               zip -r DxApp_${{ github.ref_name }}.ipa Payload
               gh release upload ${{ github.ref_name }} DxApp_${{ github.ref_name }}.ipa
+              security find-identity -v -p codesigning
               ;;
 
             "Android 🤖")
