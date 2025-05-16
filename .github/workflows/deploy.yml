@@ -167,14 +167,14 @@ jobs:
           esac
 
           if [[ "${{ matrix.platform }}" == "web" ]]; then
-            cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
+            cp target/dx/dx-app/debug/web/public/index.html target/dx/dx-app/debug/web/public/404.html
           fi
 
       - name: Optimize Wasm ⚡
         if: ${{ matrix.platform == 'web'}}
         uses: NiklasEi/wasm-opt-action@v2
         with:
-          file: target/dx/dx-app/release/web/public/wasm/*.wasm
+          file: target/dx/dx-app/debug/web/public/wasm/*.wasm
           optimize_all: true
           options: -Oz
 
@@ -182,7 +182,7 @@ jobs:
         if: ${{ matrix.platform == 'web'}}
         uses: actions/upload-pages-artifact@v3
         with:
-          path: target/dx/dx-app/release/web/public/
+          path: target/dx/dx-app/debug/web/public/
 
       - name: Deploy Github Pages 🌐
         if: ${{ matrix.platform == 'web' }}
@@ -241,15 +241,15 @@ jobs:
 
             "iOS 📱")
               mkdir Payload
-              mv target/dx/dx-app/release/ios/DxApp.app Payload/
+              mv target/dx/dx-app/debug/ios/DxApp.app Payload/
               zip -r DxApp_${{ github.ref_name }}.ipa Payload
               gh release upload ${{ github.ref_name }} DxApp_${{ github.ref_name }}.ipa
               ;;
 
             "Android 🤖")
-              mv target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/app-debug.apk target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk
-              mv target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp-aarch64.aab target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
+              mv target/dx/dx-app/debug/android/app/app/build/outputs/apk/debug/app-debug.apk target/dx/dx-app/debug/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk
+              mv target/dx/dx-app/debug/android/app/app/build/outputs/bundle/release/DxApp-aarch64.aab target/dx/dx-app/debug/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
               gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk \
-                target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
+                target/dx/dx-app/debug/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
               ;;
           esac
