@@ -24,13 +24,7 @@ jobs:
 
       - name: Setup Dependencies & Configs 🛠️
         shell: bash
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  
-          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
-          mv tailwindcss-macos-arm64 tailwindcss
-          chmod +x tailwindcss
-          ./tailwindcss -i ./input.css -o ./assets/tailwind.css
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
       - name: Run Clippy 🧹
         run: cargo clippy --all-targets --all-features
