@@ -114,7 +114,22 @@ jobs:
               if [[ "${{ matrix.platform }}" != 'web' ]]; then
                 sudo apt install libwebkit2gtk-4.1-dev libxdo-dev libglib2.0-dev libayatana-appindicator3-dev -y
               fi
+
+              ARCH=$(uname -m)
+              [[ "$ARCH" == "aarch64" ]] && TAILWIND_NAME="tailwindcss-linux-arm64" || TAILWIND_NAME="tailwindcss-linux-x64"
+              ;;
+
+            "macOS")
+              TAILWIND_NAME="tailwindcss-macos-arm64"
+              ;;
+
+            "Windows")
+              TAILWIND_NAME="tailwindcss-windows-x64.exe"
+              ;;
           esac
+
+          curl -sLO "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TAILWIND_NAME"
+          chmod +x $TAILWIND_NAME
 
           case "${{ matrix.platform }}" in
             "web")
@@ -126,6 +141,7 @@ jobs:
               ;;
           esac
 
+          ./$TAILWIND_NAME -i ./input.css -o ./assets/tailwind.css
           cargo binstall dioxus-cli --version 0.7.0-alpha.0 -y
 
       - name: Build & Deploy ${{ matrix.name }} 🚀
