@@ -249,7 +249,7 @@ jobs:
             "Android 🤖")
               mv target/dx/dx-app/debug/android/app/app/build/outputs/apk/debug/app-debug.apk target/dx/dx-app/debug/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk
               mv target/dx/dx-app/debug/android/app/app/build/outputs/bundle/release/DxApp-aarch64.aab target/dx/dx-app/debug/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk \
+              gh release upload ${{ github.ref_name }} target/dx/dx-app/debug/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk \
                 target/dx/dx-app/debug/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
               ;;
           esac
