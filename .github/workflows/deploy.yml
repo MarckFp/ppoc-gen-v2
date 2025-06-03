@@ -174,7 +174,7 @@ jobs:
         if: ${{ matrix.platform == 'web'}}
         uses: NiklasEi/wasm-opt-action@v2
         with:
-          file: target/dx/dx-app/debug/web/public/wasm/*.wasm
+          file: target/dx/dx-app/release/web/public/wasm/*.wasm
           optimize_all: true
           options: -Oz
 
@@ -182,7 +182,7 @@ jobs:
         if: ${{ matrix.platform == 'web'}}
         uses: actions/upload-pages-artifact@v3
         with:
-          path: target/dx/dx-app/debug/web/public/
+          path: target/dx/dx-app/release/web/public/
 
       - name: Deploy Github Pages 🌐
         if: ${{ matrix.platform == 'web' }}
