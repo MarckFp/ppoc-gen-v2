@@ -19,9 +19,6 @@ bundle = []
 
 [profile]
 
-[profile.wasm-dev]
-opt-level = 1
-
 [profile.release]
 opt-level = "z"
 debug = false
