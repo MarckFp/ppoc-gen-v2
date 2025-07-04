@@ -153,9 +153,8 @@ jobs:
               ;;
 
             "android")
-              dx build --release --platform android &
-              dx bundle --release --platform android --features bundle &
-              wait
+              dx build --release --platform android
+              dx bundle --release --platform android --features bundle
               ;;
 
             "ios")
