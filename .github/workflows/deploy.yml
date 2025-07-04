@@ -142,27 +142,27 @@ jobs:
           esac
 
           ./$TAILWIND_NAME -i ./input.css -o ./assets/tailwind.css
-          cargo binstall dioxus-cli --version 0.7.0-alpha.1 -y
+          cargo binstall dioxus-cli --version 0.7.0-alpha.2 -y
 
       - name: Build & Deploy ${{ matrix.name }} 🚀
         shell: bash
         run: |
           case "${{ matrix.platform }}" in
             "desktop")
-              dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle --profile release
+              dx bundle --release --platform ${{ matrix.platform }} --target ${{ matrix.target }} --features bundle
               ;;
 
             "android")
-              dx build --release --platform android --profile release
-              dx bundle --release --platform android --features bundle --profile release
+              dx build --release --platform android
+              dx bundle --release --platform android --features bundle
               ;;
 
             "ios")
-              dx bundle --release --platform ios --features bundle --profile release
+              dx bundle --release --platform ios --features bundle
               ;;
 
             *)
-              dx bundle --release --platform ${{ matrix.platform }} --features bundle --profile release
+              dx bundle --release --platform ${{ matrix.platform }} --features bundle
               ;;
           esac
 
