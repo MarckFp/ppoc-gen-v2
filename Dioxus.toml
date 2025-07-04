@@ -20,7 +20,7 @@ watch_path = ["src"]
 # Bundler
 #------------------------------------------
 [bundle]
-identifier = "io.github.dx-app"
+identifier = "io.github.dxapp"
 publisher = "MarckFp"
 copyright = ""
 category = "Utility"
