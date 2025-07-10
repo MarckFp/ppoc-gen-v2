@@ -24,10 +24,7 @@ fn main() {
 fn App() -> Element {
     rsx! {
         head {
-            meta { name: "description", content: "Dioxus template project" }
-            meta { content: "text/html;charset=utf-8", http_equiv: "Content-Type" }
-            meta { name: "viewport", content: "width=device-width, initial-scale=1" }
-            meta { charset: "UTF-8" }
+            document::Meta { name: "description", content: "Dioxus template project" }
             document::Link { rel: "icon", href: asset!("/assets/icons/favicon.ico") }
             document::Link {
                 rel: "icon",
