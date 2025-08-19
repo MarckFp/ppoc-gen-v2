@@ -8,7 +8,7 @@ on:
 #For NDK see: https://developer.android.com/ndk/downloads
 env:
   GH_TOKEN: ${{ github.token }}
-  NDK_VERSION: "28.1.13356709"
+  NDK_VERSION: "28.2.13676358"
 
 jobs:
   deploy:
@@ -133,7 +133,7 @@ jobs:
 
           case "${{ matrix.platform }}" in
             "web")
-              sed -i '/^\[web\.app\]$/a base_path = "dx-app"' Dioxus.toml
+              sed -i '/^\[web\.app\]$/a base_path = "ppoc-gen-v2"' Dioxus.toml
               ;;
 
             "android")
@@ -167,14 +167,14 @@ jobs:
           esac
 
           if [[ "${{ matrix.platform }}" == "web" ]]; then
-            cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
+            cp target/dx/ppoc-gen-v2/release/web/public/index.html target/dx/ppoc-gen-v2/release/web/public/404.html
           fi
 
       - name: Optimize Wasm ⚡
         if: ${{ matrix.platform == 'web'}}
         uses: NiklasEi/wasm-opt-action@v2
         with:
-          file: target/dx/dx-app/release/web/public/wasm/*.wasm
+          file: target/dx/ppoc-gen-v2/release/web/public/wasm/*.wasm
           optimize_all: true
           options: -Oz
 
@@ -182,7 +182,7 @@ jobs:
         if: ${{ matrix.platform == 'web'}}
         uses: actions/upload-pages-artifact@v3
         with:
-          path: target/dx/dx-app/release/web/public/
+          path: target/dx/ppoc-gen-v2/release/web/public/
 
       - name: Deploy Github Pages 🌐
         if: ${{ matrix.platform == 'web' }}
@@ -201,55 +201,55 @@ jobs:
         run: |
           case "${{ matrix.name }}" in
             "Windows x86 🪟")
-              upx --best target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x86-setup.exe
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x86_en-US.msi \
-                target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x86-setup.exe
+              upx --best target/dx/ppoc-gen-v2/bundle/windows/bundle/nsis/PPOCGen_${{ github.ref_name }}_x86-setup.exe
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/windows/bundle/msi/PPOCGen_${{ github.ref_name }}_x86_en-US.msi \
+                target/dx/ppoc-gen-v2/bundle/windows/bundle/nsis/PPOCGen_${{ github.ref_name }}_x86-setup.exe
               ;;
             "Windows x64 🪟")
-              upx --best target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_x64_en-US.msi \
-                target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_x64-setup.exe
+              upx --best target/dx/ppoc-gen-v2/bundle/windows/bundle/nsis/PPOCGen_${{ github.ref_name }}_x64-setup.exe
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/windows/bundle/msi/PPOCGen_${{ github.ref_name }}_x64_en-US.msi \
+                target/dx/ppoc-gen-v2/bundle/windows/bundle/nsis/PPOCGen_${{ github.ref_name }}_x64-setup.exe
               ;;
 
             "Windows ARM64 🪟")
-              upx --best target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/windows/bundle/msi/DxApp_${{ github.ref_name }}_arm64_en-US.msi \
-                target/dx/dx-app/bundle/windows/bundle/nsis/DxApp_${{ github.ref_name }}_arm64-setup.exe
+              upx --best target/dx/ppoc-gen-v2/bundle/windows/bundle/nsis/PPOCGen_${{ github.ref_name }}_arm64-setup.exe
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/windows/bundle/msi/PPOCGen_${{ github.ref_name }}_arm64_en-US.msi \
+                target/dx/ppoc-gen-v2/bundle/windows/bundle/nsis/PPOCGen_${{ github.ref_name }}_arm64-setup.exe
               ;;
 
             "Linux x64 🐧")
-              upx --best target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_amd64.deb \
-                target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.x86_64.rpm \
-                target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_amd64.AppImage
+              upx --best target/dx/ppoc-gen-v2/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_amd64.AppImage
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/linux/bundle/deb/PPOCGen_${{ github.ref_name }}_amd64.deb \
+                target/dx/ppoc-gen-v2/bundle/linux/bundle/rpm/PPOCGen-${{ github.ref_name }}-.x86_64.rpm \
+                target/dx/ppoc-gen-v2/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_amd64.AppImage
               ;;
 
             "Linux ARM64 🐧")
-              upx --best target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/linux/bundle/deb/DxApp_${{ github.ref_name }}_arm64.deb \
-                target/dx/dx-app/bundle/linux/bundle/rpm/DxApp-${{ github.ref_name }}-.aarch64.rpm \
-                target/dx/dx-app/bundle/linux/bundle/appimage/DxApp_${{ github.ref_name }}_aarch64.AppImage
+              upx --best target/dx/ppoc-gen-v2/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_aarch64.AppImage
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/linux/bundle/deb/PPOCGen_${{ github.ref_name }}_arm64.deb \
+                target/dx/ppoc-gen-v2/bundle/linux/bundle/rpm/PPOCGen-${{ github.ref_name }}-.aarch64.rpm \
+                target/dx/ppoc-gen-v2/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_aarch64.AppImage
               ;;
 
             "MacOS x64 🍏")
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_x64.dmg
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/macos/bundle/dmg/PPOCGen_${{ github.ref_name }}_x64.dmg
               ;;
 
             "MacOS ARM64 🍏")
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/bundle/macos/bundle/dmg/DxApp_${{ github.ref_name }}_aarch64.dmg
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/bundle/macos/bundle/dmg/PPOCGen_${{ github.ref_name }}_aarch64.dmg
               ;;
 
             "iOS 📱")
               mkdir Payload
-              mv target/dx/dx-app/release/ios/DxApp.app Payload/
-              zip -r DxApp_${{ github.ref_name }}.ipa Payload
-              gh release upload ${{ github.ref_name }} DxApp_${{ github.ref_name }}.ipa
+              mv target/dx/ppoc-gen-v2/release/ios/PPOCGen.app Payload/
+              zip -r PPOCGen_${{ github.ref_name }}.ipa Payload
+              gh release upload ${{ github.ref_name }} PPOCGen_${{ github.ref_name }}.ipa
               ;;
 
             "Android 🤖")
-              mv target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/app-debug.apk target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk
-              mv target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp-aarch64-linux-android.aab target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
-              gh release upload ${{ github.ref_name }} target/dx/dx-app/release/android/app/app/build/outputs/apk/debug/DxApp_${{ github.ref_name }}.apk \
-                target/dx/dx-app/release/android/app/app/build/outputs/bundle/release/DxApp_${{ github.ref_name }}.aab
+              mv target/dx/ppoc-gen-v2/release/android/app/app/build/outputs/apk/debug/app-debug.apk target/dx/ppoc-gen-v2/release/android/app/app/build/outputs/apk/debug/PPOCGen_${{ github.ref_name }}.apk
+              mv target/dx/ppoc-gen-v2/release/android/app/app/build/outputs/bundle/release/PPOCGen-aarch64-linux-android.aab target/dx/ppoc-gen-v2/release/android/app/app/build/outputs/bundle/release/PPOCGen_${{ github.ref_name }}.aab
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen-v2/release/android/app/app/build/outputs/apk/debug/PPOCGen_${{ github.ref_name }}.apk \
+                target/dx/ppoc-gen-v2/release/android/app/app/build/outputs/bundle/release/PPOCGen_${{ github.ref_name }}.aab
               ;;
           esac

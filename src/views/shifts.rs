@@ -32,8 +32,9 @@ struct ShiftItem {
 
 #[derive(Clone, Default)]
 struct ManualForm {
-    schedule_id: String,
-    date: String,
+    loc: String,
+    start_dt: String, // YYYY-MM-DDTHH:MM
+    end_dt: String,   // YYYY-MM-DDTHH:MM
     selected_pids: Vec<i64>,
     add_pid: String,
 }
@@ -42,6 +43,16 @@ struct ManualForm {
 struct AutoForm {
     start: String,
     end: String,
+}
+
+#[derive(Clone, Default)]
+struct EditForm {
+    shift_id: i64,
+    loc: String,
+    start_dt: String, // YYYY-MM-DDTHH:MM
+    end_dt: String,   // YYYY-MM-DDTHH:MM
+    selected_pids: Vec<i64>,
+    add_pid: String,
 }
 
 #[derive(Clone)]
@@ -54,19 +65,18 @@ struct ScheduleFull {
     start_hour: String,
     end_hour: String,
     weekday: String,
-    num_publishers: i64,
+        // Manual create modal
     num_shift_managers: i64,
     num_brothers: i64,
     num_sisters: i64,
 }
 
-// use central weekday helpers from i18n
-
+// Date helpers used across the view
 fn fmt_date_ymd(ymd: &(i32, u32, u32)) -> String { format!("{:04}-{:02}-{:02}", ymd.0, ymd.1, ymd.2) }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn month_start_end(y: i32, m: u32) -> (i32, u32, u32) {
-    let last = if m == 12 { NaiveDate::from_ymd_opt(y + 1, 1, 1).unwrap() - Duration::days(1) } else { NaiveDate::from_ymd_opt(y, m + 1, 1).unwrap() - Duration::days(1) };
+    let last = if m == 12 { chrono::NaiveDate::from_ymd_opt(y + 1, 1, 1).unwrap() - chrono::Duration::days(1) } else { chrono::NaiveDate::from_ymd_opt(y, m + 1, 1).unwrap() - chrono::Duration::days(1) };
     (y, m, last.day())
 }
 
@@ -86,6 +96,7 @@ fn now_year_month() -> (i32, u32) {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn now_year_month() -> (i32, u32) {
+    use chrono::Datelike;
     let now = chrono::Local::now().naive_local().date();
     (now.year(), now.month())
 }
@@ -106,128 +117,185 @@ pub fn Shifts() -> Element {
     let mut view = use_signal(|| "month".to_string()); // or "agenda"
     let mut is_small_screen = use_signal(|| false);
     let mut manual_open = use_signal(|| false);
+    let mut edit_open = use_signal(|| false);
     let mut auto_open = use_signal(|| false);
     let mut export_open = use_signal(|| false);
     let mut generating = use_signal(|| false);
-    let mut manual_form = use_signal(ManualForm::default);
+    // forms
     let mut auto_form = use_signal(AutoForm::default);
     #[derive(Clone, Default)]
     struct ExportForm { start: String, end: String }
     let mut export_form = use_signal(ExportForm::default);
 
+    // data/signals required by the view
+    let (yy, mm) = now_year_month();
+    let mut year = use_signal(move || yy);
+    let mut month = use_signal(move || mm);
     let mut list = use_signal(|| Vec::<ShiftItem>::new());
-    let mut schedules = use_signal(|| Vec::<(i64, String, String, String)>::new()); // id, label, start, end
     let mut publishers_all = use_signal(|| Vec::<PublisherItem>::new());
     let mut schedules_full = use_signal(|| Vec::<ScheduleFull>::new());
+    let mut selected_ids = use_signal(|| std::collections::BTreeSet::<i64>::new());
     let mut select_mode = use_signal(|| false);
-    let mut selected_ids = use_signal(|| std::collections::HashSet::<i64>::new());
-    let mut edit_open = use_signal(|| false);
-    let mut confirm_delete_id = use_signal(|| Option::<i64>::None);
-    #[derive(Clone, Default)]
-    struct EditForm { shift_id: i64, selected_pids: Vec<i64>, add_pid: String, date: String, loc: String, start: String, end: String, selected_schedule_id: Option<i64> }
+    let mut manual_form = use_signal(ManualForm::default);
     let mut edit_form = use_signal(EditForm::default);
+    let mut confirm_delete_id = use_signal(|| None as Option<i64>);
+    let mut loc_suggestions = use_signal(|| Vec::<String>::new());
 
-    // current month
-    let (initial_year, initial_month) = now_year_month();
-    let mut year = use_signal(move || initial_year);
-    let mut month = use_signal(move || initial_month);
-
-    // load schedules and current month shifts
+    // helper to refresh current month list and suggestions
     let refresh_month = {
         let mut list = list.clone();
         let year = year.clone();
         let month = month.clone();
+        let mut publishers_all = publishers_all.clone();
+        let mut schedules_full_sig = schedules_full.clone();
+        let mut loc_suggestions = loc_suggestions.clone();
         move || {
             let (y, m, last_day) = month_start_end(year(), month());
+            // Load publishers and schedules (full) for both targets
             #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
             {
-                let start = NaiveDateTime::new(NaiveDate::from_ymd_opt(y, m, 1).unwrap(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-                let end = NaiveDateTime::new(NaiveDate::from_ymd_opt(y, m, last_day).unwrap(), NaiveTime::from_hms_opt(23, 59, 59).unwrap());
+                // publishers
+                let pubs = dao::list_publishers().unwrap_or_default();
+                let name_order = dao::get_configuration().ok().map(|c| c.name_order).unwrap_or_else(|| "first_last".into());
+                let mapped: Vec<PublisherItem> = pubs
+                    .iter()
+                    .map(|p| {
+                        let label = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
+                        PublisherItem { id: p.id, label, gender: p.gender.clone(), is_shift_manager: p.is_shift_manager }
+                    })
+                    .collect();
+                publishers_all.set(mapped);
+                // schedules full
+                let sch = dao::list_schedules().unwrap_or_default();
+                let full: Vec<ScheduleFull> = sch
+                    .iter()
+                    .map(|s| ScheduleFull {
+                        id: s.id,
+                        location: s.location.clone(),
+                        start_hour: s.start_hour.clone(),
+                        end_hour: s.end_hour.clone(),
+                        weekday: s.weekday.clone(),
+                        num_shift_managers: s.num_shift_managers,
+                        num_brothers: s.num_brothers,
+                        num_sisters: s.num_sisters,
+                    })
+                    .collect();
+                schedules_full_sig.set(full.clone());
+
+                // list items for current month
+                let start = NaiveDateTime::new(chrono::NaiveDate::from_ymd_opt(y, m, 1).unwrap(), chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+                let end = NaiveDateTime::new(chrono::NaiveDate::from_ymd_opt(y, m, last_day).unwrap(), chrono::NaiveTime::from_hms_opt(23, 59, 59).unwrap());
                 if let Ok(shifts) = dao::list_shifts_between(start, end) {
-                    let items = shifts.into_iter().map(|s| {
-                        let date = s.start.date().to_string();
-                        let title = format!("{} • {}–{}", s.location, s.start.format("%H:%M"), s.end.format("%H:%M"));
-                        ShiftItem { id: s.id, date, title, publishers: s.publishers.clone(), location: s.location.clone(), start_hour: s.start.format("%H:%M").to_string(), end_hour: s.end.format("%H:%M").to_string() }
-                    }).collect();
-                    list.set(items);
+                    let items: Vec<ShiftItem> = shifts
+                        .into_iter()
+                        .map(|s| {
+                            let date = s.start.date().to_string();
+                            let title = format!("{} • {}–{}", s.location, s.start.format("%H:%M"), s.end.format("%H:%M"));
+                            ShiftItem {
+                                id: s.id,
+                                date,
+                                title,
+                                publishers: s.publishers.clone(),
+                                location: s.location.clone(),
+                                start_hour: s.start.format("%H:%M").to_string(),
+                                end_hour: s.end.format("%H:%M").to_string(),
+                            }
+                        })
+                        .collect();
+                    list.set(items.clone());
+                    // suggestions from schedules + items
+                    use std::collections::BTreeSet;
+                    let mut set: BTreeSet<String> = full.iter().map(|s| s.location.clone()).collect();
+                    for it in items { set.insert(it.location); }
+                    loc_suggestions.set(set.into_iter().collect());
                 }
             }
             #[cfg(target_arch = "wasm32")]
             {
+                // publishers
+                let pubs = wasm_backend::list_publishers();
+                let name_order = wasm_backend::get_name_order();
+                let mapped: Vec<PublisherItem> = pubs
+                    .iter()
+                    .map(|p| {
+                        let label = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
+                        PublisherItem { id: p.id, label, gender: p.gender.clone(), is_shift_manager: p.is_shift_manager }
+                    })
+                    .collect();
+                publishers_all.set(mapped);
+                // schedules full
+                let sch = wasm_backend::list_schedules();
+                let full: Vec<ScheduleFull> = sch
+                    .iter()
+                    .map(|s| ScheduleFull {
+                        id: s.id,
+                        location: s.location.clone(),
+                        start_hour: s.start_hour.clone(),
+                        end_hour: s.end_hour.clone(),
+                        weekday: s.weekday.clone(),
+                        num_shift_managers: s.num_shift_managers,
+                        num_brothers: s.num_brothers,
+                        num_sisters: s.num_sisters,
+                    })
+                    .collect();
+                schedules_full_sig.set(full.clone());
+
+                // list items for current month
                 let start = format!("{:04}-{:02}-01 00:00:00", y, m);
                 let end = format!("{:04}-{:02}-{:02} 23:59:59", y, m, last_day);
                 let shifts = wasm_backend::list_shifts_between(&start, &end);
-                let items = shifts.into_iter().map(|s| {
-                    let date = s.start_datetime[0..10].to_string();
-                    let title = format!("{} • {}–{}", s.location, &s.start_datetime[11..16], &s.end_datetime[11..16]);
-                    ShiftItem { id: s.id, date, title, publishers: s.publishers.clone(), location: s.location.clone(), start_hour: s.start_datetime[11..16].to_string(), end_hour: s.end_datetime[11..16].to_string() }
-                }).collect();
+                let items: Vec<ShiftItem> = shifts
+                    .into_iter()
+                    .map(|s| {
+                        let date = s.start_datetime[0..10].to_string();
+                        let title = format!("{} • {}–{}", s.location, &s.start_datetime[11..16], &s.end_datetime[11..16]);
+                        ShiftItem {
+                            id: s.id,
+                            date,
+                            title,
+                            publishers: s.publishers.clone(),
+                            location: s.location.clone(),
+                            start_hour: s.start_datetime[11..16].to_string(),
+                            end_hour: s.end_datetime[11..16].to_string(),
+                        }
+                    })
+                    .collect();
+                // set items and build suggestions
+                use std::collections::BTreeSet;
+                let mut set: BTreeSet<String> = full.iter().map(|s| s.location.clone()).collect();
+                for it in &items { set.insert(it.location.clone()); }
                 list.set(items);
+                loc_suggestions.set(set.into_iter().collect());
             }
         }
     };
 
-    let mut refresh_for_effect = refresh_month.clone();
-    use_effect(move || {
-        // load schedules
-    #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
-        if let Ok(items) = dao::list_schedules() {
-            let mapped = items.iter().cloned().map(|s| (s.id, format!("{} • {}–{} ({})", s.location.clone(), s.start_hour.clone(), s.end_hour.clone(), s.weekday.clone()), s.start_hour.clone(), s.end_hour.clone())).collect();
-            schedules.set(mapped);
-            let full = items.into_iter().map(|s| ScheduleFull { id: s.id, location: s.location, start_hour: s.start_hour, end_hour: s.end_hour, weekday: s.weekday, num_publishers: s.num_publishers as i64, num_shift_managers: s.num_shift_managers as i64, num_brothers: s.num_brothers as i64, num_sisters: s.num_sisters as i64 }).collect();
-            schedules_full.set(full);
-            // Respect configured name order for display labels
-            let name_order = dao::get_configuration().ok().map(|c| c.name_order).unwrap_or_else(|| "first_last".into());
-            let pubs = dao::list_publishers().unwrap_or_default().into_iter().map(|p| {
-                let label = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
-                PublisherItem { id: p.id, label, gender: p.gender, is_shift_manager: p.is_shift_manager }
-            }).collect();
-            publishers_all.set(pubs);
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            let items = wasm_backend::list_schedules();
-            let mapped = items.iter().cloned().map(|s| (s.id, format!("{} • {}–{} ({})", s.location.clone(), s.start_hour.clone(), s.end_hour.clone(), s.weekday.clone()), s.start_hour.clone(), s.end_hour.clone())).collect();
-            schedules.set(mapped);
-            let full = items.into_iter().map(|s| ScheduleFull { id: s.id, location: s.location, start_hour: s.start_hour, end_hour: s.end_hour, weekday: s.weekday, num_publishers: s.num_publishers, num_shift_managers: s.num_shift_managers, num_brothers: s.num_brothers, num_sisters: s.num_sisters }).collect();
-            schedules_full.set(full);
-            // Respect configured name order for display labels
-            let name_order = wasm_backend::get_name_order();
-            let pubs = wasm_backend::list_publishers().into_iter().map(|p| {
-                let label = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
-                PublisherItem { id: p.id, label, gender: p.gender, is_shift_manager: p.is_shift_manager }
-            }).collect();
-            publishers_all.set(pubs);
-        }
-        // default autofill to current month
-    let (y, m, last) = month_start_end(year(), month());
-    auto_form.write().start = fmt_date_ymd(&(y, m, 1));
-    auto_form.write().end = fmt_date_ymd(&(y, m, last));
-    export_form.write().start = fmt_date_ymd(&(y, m, 1));
-    export_form.write().end = fmt_date_ymd(&(y, m, last));
-    refresh_for_effect();
-    });
-
-    // Detect screen size (wasm) and force agenda view on small screens; update on resize
+    // initialize current month range and screen size; refresh data
+    {
+        let mut auto_form = auto_form.clone();
+    let mut refresh = refresh_month.clone();
+        use_effect(move || {
+            let (yy, mm) = now_year_month();
+            let (_, _, last) = month_start_end(yy, mm);
+            auto_form.write().start = fmt_date_ymd(&(yy, mm, 1));
+            auto_form.write().end = fmt_date_ymd(&(yy, mm, last));
+            refresh();
+        });
+    }
     #[cfg(target_arch = "wasm32")]
     {
-    let mut is_small_screen = is_small_screen.clone();
-    let mut view = view.clone();
+        // set initial screen size and attach resize listener
+        let mut is_small_screen2 = is_small_screen.clone();
+        let mut view2 = view.clone();
         use_effect(move || {
-            // helper to compute and apply current breakpoint
-            let mut update = || {
-                let width = window().and_then(|w| w.inner_width().ok()).and_then(|v| v.as_f64()).unwrap_or(1024.0);
-                let small = width < 640.0; // match Tailwind sm breakpoint
-                let prev = is_small_screen();
-                if prev != small {
-                    is_small_screen.set(small);
-                }
-                if small && view() != "agenda" { view.set("agenda".to_string()); }
-            };
-            update();
-
-            let mut is_small_screen2 = is_small_screen.clone();
-            let mut view2 = view.clone();
+            // initial
+            let width = window().and_then(|w| w.inner_width().ok()).and_then(|v| v.as_f64()).unwrap_or(1024.0);
+            let small = width < 640.0;
+            is_small_screen2.set(small);
+            if small && view2() != "agenda" { view2.set("agenda".to_string()); }
+            // listener
+            let mut is_small_screen2 = is_small_screen2.clone();
+            let mut view2 = view2.clone();
             let cb = Closure::wrap(Box::new(move || {
                 let width = window().and_then(|w| w.inner_width().ok()).and_then(|v| v.as_f64()).unwrap_or(1024.0);
                 let small = width < 640.0;
@@ -236,7 +304,6 @@ pub fn Shifts() -> Element {
                 if small && view2() != "agenda" { view2.set("agenda".to_string()); }
             }) as Box<dyn FnMut()>);
             if let Some(w) = window() { let _ = w.add_event_listener_with_callback("resize", cb.as_ref().unchecked_ref()); }
-            // Leak the callback to keep it alive for the page lifetime (simple and safe here)
             cb.forget();
         });
     }
@@ -320,30 +387,23 @@ pub fn Shifts() -> Element {
     let mut refresh = refresh_month.clone();
         move |_| {
             let f = manual_form.read().clone();
-            if f.schedule_id.is_empty() || f.date.is_empty() { return; }
-            let sid: i64 = f.schedule_id.parse().unwrap_or_default();
+            if f.loc.trim().is_empty() || f.start_dt.is_empty() || f.end_dt.is_empty() { return; }
             #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
             {
-                if let Ok(schedules_full) = dao::list_schedules() {
-                    if let Some(s_full) = schedules_full.into_iter().find(|s| s.id == sid) {
-                        if let Some(d) = NaiveDate::parse_from_str(&f.date, "%Y-%m-%d").ok() {
-                            let start = NaiveDateTime::new(d, NaiveTime::parse_from_str(&s_full.start_hour, "%H:%M").unwrap());
-                            let end = NaiveDateTime::new(d, NaiveTime::parse_from_str(&s_full.end_hour, "%H:%M").unwrap());
-                            let _ = dao::create_shift(start, end, &s_full.location, &f.selected_pids, None);
-                            refresh();
-                        }
-                    }
+                use chrono::NaiveDateTime;
+                let start = f.start_dt.replace('T', " ") + ":00";
+                let end = f.end_dt.replace('T', " ") + ":00";
+                if let (Ok(st), Ok(et)) = (NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S"), NaiveDateTime::parse_from_str(&end, "%Y-%m-%d %H:%M:%S")) {
+                    let _ = dao::create_shift(st, et, &f.loc, &f.selected_pids, None);
+                    refresh();
                 }
             }
             #[cfg(target_arch = "wasm32")]
             {
-                let schedules_full = wasm_backend::list_schedules();
-                if let Some(s_full) = schedules_full.into_iter().find(|s| s.id == sid) {
-                    let start = format!("{} {}:00", f.date, s_full.start_hour);
-                    let end = format!("{} {}:00", f.date, s_full.end_hour);
-                    let _ = wasm_backend::create_shift(&start, &end, &s_full.location, &f.selected_pids, None);
-                    refresh();
-                }
+                let start = f.start_dt.replace('T', " ") + ":00";
+                let end = f.end_dt.replace('T', " ") + ":00";
+                let _ = wasm_backend::create_shift(&start, &end, &f.loc, &f.selected_pids, None);
+                refresh();
             }
             manual_open.set(false);
         }
@@ -358,28 +418,26 @@ pub fn Shifts() -> Element {
             let f = edit_form.read();
             #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
             {
-                use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-                // First update publishers
+                use chrono::NaiveDateTime;
+                // update publishers
                 let _ = dao::update_shift_publishers(f.shift_id, &f.selected_pids, None);
-                // Then update date/time if possible (requires date/start/end)
-                if !f.date.is_empty() && !f.start.is_empty() && !f.end.is_empty() {
-                    if let Ok(d) = NaiveDate::parse_from_str(&f.date, "%Y-%m-%d") {
-                        if let (Ok(st), Ok(et)) = (NaiveTime::parse_from_str(&f.start, "%H:%M"), NaiveTime::parse_from_str(&f.end, "%H:%M")) {
-                            let start_dt = NaiveDateTime::new(d, st);
-                            let end_dt = NaiveDateTime::new(d, et);
-                            let _ = dao::update_shift_datetime_location(f.shift_id, start_dt, end_dt, &f.loc, None);
-                        }
+                // update datetime + location if valid
+                if !f.start_dt.is_empty() && !f.end_dt.is_empty() {
+                    let start = f.start_dt.replace('T', " ") + ":00";
+                    let end = f.end_dt.replace('T', " ") + ":00";
+                    if let (Ok(st), Ok(et)) = (NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S"), NaiveDateTime::parse_from_str(&end, "%Y-%m-%d %H:%M:%S")) {
+                        let _ = dao::update_shift_datetime_location(f.shift_id, st, et, &f.loc, None);
                     }
                 }
             }
             #[cfg(target_arch = "wasm32")]
             {
-                // First update publishers
+                // update publishers
                 let _ = wasm_backend::update_shift_publishers(f.shift_id, &f.selected_pids, None);
-                // Then update datetime if date/start/end present
-                if !f.date.is_empty() && !f.start.is_empty() && !f.end.is_empty() {
-                    let start = format!("{} {}:00", f.date, f.start);
-                    let end = format!("{} {}:00", f.date, f.end);
+                // update datetime + location
+                if !f.start_dt.is_empty() && !f.end_dt.is_empty() {
+                    let start = f.start_dt.replace('T', " ") + ":00";
+                    let end = f.end_dt.replace('T', " ") + ":00";
                     let _ = wasm_backend::update_shift_datetime_location(f.shift_id, &start, &end, &f.loc, None);
                 }
             }
@@ -1137,7 +1195,7 @@ pub fn Shifts() -> Element {
                         ul { class: "divide-y divide-slate-200 dark:divide-slate-700",
                             for item in filtered_items.clone() {
                                 li { class: "py-3 flex items-start justify-between gap-3",
-                                    div { class: "min-w-0 w-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2", onclick: { let mut edit_form = edit_form.clone(); let mut edit_open = edit_open.clone(); let it = item.clone(); let schedules_full = schedules_full.clone(); move |_| { let mut w = edit_form.write(); w.shift_id = it.id; w.selected_pids = it.publishers.clone(); w.add_pid.clear(); w.date = it.date.clone(); w.loc = it.location.clone(); w.start = it.start_hour.clone(); w.end = it.end_hour.clone(); w.selected_schedule_id = schedules_full.read().iter().find(|s| s.location==w.loc && s.start_hour==w.start && s.end_hour==w.end).map(|s| s.id); edit_open.set(true); } },
+                                    div { class: "min-w-0 w-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2", onclick: { let mut edit_form = edit_form.clone(); let mut edit_open = edit_open.clone(); let it = item.clone(); move |_| { let mut w = edit_form.write(); w.shift_id = it.id; w.selected_pids = it.publishers.clone(); w.add_pid.clear(); w.loc = it.location.clone(); w.start_dt = format!("{}T{}", it.date.clone(), it.start_hour.clone()); w.end_dt = format!("{}T{}", it.date.clone(), it.end_hour.clone()); edit_open.set(true); } },
                                         div { class: "text-sm text-slate-500 flex items-center gap-2",
                                             {
                                                 // Show date and weekday for clarity
@@ -1181,7 +1239,7 @@ pub fn Shifts() -> Element {
                                             let mut names: Vec<String> = it.publishers.iter().filter_map(|pid| publishers_all.read().iter().find(|p| p.id == *pid).map(|p| p.label.clone())).collect();
                                             names.sort();
                                             rsx!( div { class: "text-[12px] flex flex-col gap-1 cursor-pointer border rounded p-2",
-                                                onclick: { let mut edit_form = edit_form.clone(); let mut edit_open = edit_open.clone(); let it2 = it.clone(); let schedules_full = schedules_full.clone(); move |_| { let mut w = edit_form.write(); w.shift_id = it2.id; w.selected_pids = it2.publishers.clone(); w.add_pid.clear(); w.date = it2.date.clone(); w.loc = it2.location.clone(); w.start = it2.start_hour.clone(); w.end = it2.end_hour.clone(); w.selected_schedule_id = schedules_full.read().iter().find(|s| s.location==w.loc && s.start_hour==w.start && s.end_hour==w.end).map(|s| s.id); edit_open.set(true); } },
+                                                onclick: { let mut edit_form = edit_form.clone(); let mut edit_open = edit_open.clone(); let it2 = it.clone(); move |_| { let mut w = edit_form.write(); w.shift_id = it2.id; w.selected_pids = it2.publishers.clone(); w.add_pid.clear(); w.loc = it2.location.clone(); w.start_dt = format!("{}T{}", it2.date.clone(), it2.start_hour.clone()); w.end_dt = format!("{}T{}", it2.date.clone(), it2.end_hour.clone()); edit_open.set(true); } },
                                                 div { class: "flex items-center gap-2 flex-wrap",
                                                     span { style: dot_style }
                                                     span { class: "font-semibold text-slate-900 dark:text-slate-100", {it.location.clone()} }
@@ -1206,33 +1264,27 @@ pub fn Shifts() -> Element {
         { manual_open().then(|| rsx!(
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
-            h2 { class: "text-lg font-semibold", {t("shifts.new_title")} }
+                    h2 { class: "text-lg font-semibold", {t("shifts.new_title")} }
                     div { class: "grid grid-cols-1 gap-3",
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm", value: manual_form.read().schedule_id.clone(), onchange: move |e| manual_form.write().schedule_id = e.value(),
-                option { value: "", {t("shifts.select_schedule")} }
-                            {
-                                let mut v = schedules.read().clone();
-                                // Sort by weekday index (locale-agnostic) then by start time
-                                let week_start = week_start.clone();
-                                v.sort_by(|a,b| {
-                                    let (_id_a, label_a, sh_a, _eh_a) = a.clone();
-                                    let (_id_b, label_b, sh_b, _eh_b) = b.clone();
-                                    let wd_a = label_a.split('(').last().unwrap_or("").trim_end_matches(')').to_string();
-                                    let wd_b = label_b.split('(').last().unwrap_or("").trim_end_matches(')').to_string();
-                                    let mut ra = weekday_index_from_name(&wd_a) as i32; // 1..7 (Mon..Sun)
-                                    let mut rb = weekday_index_from_name(&wd_b) as i32;
-                                    if week_start.eq_ignore_ascii_case("sunday") { // make Sun=1..Sat=7
-                                        ra = if ra == 7 { 1 } else { ra + 1 };
-                                        rb = if rb == 7 { 1 } else { rb + 1 };
-                                    }
-                                    ra.cmp(&rb)
-                                        .then(sh_a.cmp(&sh_b))
-                                        .then(label_a.cmp(&label_b))
-                                });
-                                rsx!( for (id, label, _sh, _eh) in v.into_iter() { option { value: "{id}", "{label}" } } )
+                        // location with suggestions
+                        div { class: "space-y-1",
+                            label { class: "text-xs text-slate-600 dark:text-slate-300", {t("schedules.location")} }
+                            input { r#type: "text", list: "locs", placeholder: t("schedules.location_placeholder"), class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: manual_form.read().loc.clone(), oninput: move |e| manual_form.write().loc = e.value() }
+                            datalist { id: "locs",
+                                for v in loc_suggestions.read().iter() { option { value: "{v}" } }
                             }
                         }
-                        input { r#type: "date", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm", value: manual_form.read().date.clone(), oninput: move |e| manual_form.write().date = e.value() }
+                        // start/end datetime
+                        div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                            div { class: "space-y-1",
+                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.start_datetime")} }
+                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: manual_form.read().start_dt.clone(), oninput: move |e| manual_form.write().start_dt = e.value() }
+                            }
+                            div { class: "space-y-1",
+                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.end_datetime")} }
+                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: manual_form.read().end_dt.clone(), oninput: move |e| manual_form.write().end_dt = e.value() }
+                            }
+                        }
                         // add publishers
                         div { class: "space-y-2",
                             div { class: "flex items-center gap-2",
@@ -1261,51 +1313,19 @@ pub fn Shifts() -> Element {
                                     }
                                 }
                             }
-                            // warnings
+                            // warnings (simple absence/same-day checks)
                             {
-                                // compute simple warnings heuristics
                                 let mut warns: Vec<String> = Vec::new();
-                                if let Some((sid, date_s)) = (!manual_form.read().schedule_id.is_empty()).then(|| manual_form.read().schedule_id.clone()).and_then(|v| v.parse::<i64>().ok()).zip((!manual_form.read().date.is_empty()).then(|| manual_form.read().date.clone())) {
-                                    // check weekday mismatch
-                                    if let Some(s_full) = schedules_full.read().iter().find(|s| s.id == sid) {
-                                        #[cfg(not(target_arch = "wasm32"))]
-                                        {
-                                            if let Ok(d) = NaiveDate::parse_from_str(&date_s, "%Y-%m-%d") {
-                                                let day_idx = weekday_index_for_date(d.year(), d.month(), d.day());
-                                                let sched_idx = weekday_index_from_name(&s_full.weekday);
-                                                if day_idx != sched_idx { warns.push(t("shifts.warn_weekday_mismatch")); }
-                                            }
-                                        }
-                                        #[cfg(target_arch = "wasm32")]
-                                        {
-                                            let (y,m,d) = parse_ymd(&date_s);
-                                            let day_idx = weekday_index_for_date(y,m,d);
-                                            let sched_idx = weekday_index_from_name(&s_full.weekday);
-                                            if day_idx != sched_idx { warns.push(t("shifts.warn_weekday_mismatch")); }
-                                        }
-                                        // count checks
-                                        let mut num_mgr = 0; let mut num_male = 0; let mut num_female = 0;
-                                        for pid in manual_form.read().selected_pids.iter() {
-                                            if let Some(p) = publishers_all.read().iter().find(|pp| pp.id == *pid) {
-                                                if p.is_shift_manager { num_mgr += 1; }
-                                                if p.gender == "Male" { num_male += 1; } else { num_female += 1; }
-                                            }
-                                        }
-                                        if (num_mgr as i64) != s_full.num_shift_managers { warns.push(t("shifts.warn_mgr_count_differs")); }
-                                        if (num_male as i64) < s_full.num_brothers { warns.push(t("shifts.warn_fewer_brothers")); }
-                                        if (num_female as i64) < s_full.num_sisters { warns.push(t("shifts.warn_fewer_sisters")); }
-                                        if (manual_form.read().selected_pids.len() as i64) != s_full.num_publishers { warns.push(t("shifts.warn_total_count_differs")); }
-                                    }
-                                    // availability and same-day assignment checks per publisher
+                                if !manual_form.read().start_dt.is_empty() {
+                                    let date_s = manual_form.read().start_dt.split('T').next().unwrap_or("").to_string();
                                     for pid in manual_form.read().selected_pids.iter() {
                                         #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
                                         {
-                                            if let Ok(d) = NaiveDate::parse_from_str(&date_s, "%Y-%m-%d") {
+                                            if let Ok(d) = chrono::NaiveDate::parse_from_str(&date_s, "%Y-%m-%d") {
                                                 let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
                                                 if dao::is_absent_on(*pid, d).unwrap_or(false) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
-                                                // same day conflict
-                                                let day_start = NaiveDateTime::new(d, NaiveTime::from_hms_opt(0,0,0).unwrap());
-                                                let day_end = NaiveDateTime::new(d, NaiveTime::from_hms_opt(23,59,59).unwrap());
+                                                let day_start = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(0,0,0).unwrap());
+                                                let day_end = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(23,59,59).unwrap());
                                                 let existing = dao::list_shifts_between(day_start, day_end).unwrap_or_default();
                                                 if existing.iter().any(|sh| sh.publishers.contains(pid)) { warns.push(format!("{} {}", name, t("shifts.warn_already_has_shift"))); }
                                             }
@@ -1356,24 +1376,23 @@ pub fn Shifts() -> Element {
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("shifts.edit_title")} }
                     div { class: "space-y-2",
-                        // date field to allow changing the shift date
-                        input { r#type: "date", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().date.clone(), oninput: move |e| { let mut w = edit_form.write(); w.date = e.value(); } }
-                        // schedule select to change location/hours; pre-select current schedule if matched
-                        select { class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full", value: { edit_form.read().selected_schedule_id.map(|id| id.to_string()).unwrap_or_else(|| "".into()) },
-                            onchange: move |e| {
-                                let val = e.value();
-                                if let Ok(sid) = val.parse::<i64>() {
-                                    if let Some(s) = schedules_full.read().iter().find(|x| x.id == sid).cloned() {
-                                        let mut w = edit_form.write();
-                                        w.selected_schedule_id = Some(sid);
-                                        w.loc = s.location;
-                                        w.start = s.start_hour;
-                                        w.end = s.end_hour;
-                                    }
-                                }
-                            },
-                            option { value: "", {t("shifts.select_schedule")} }
-                            for s in schedules_full.read().iter() { option { value: "{s.id}", "{s.location} • {s.start_hour}-{s.end_hour} ({s.weekday})" } }
+                        // location and datetime fields
+                        div { class: "space-y-1",
+                            label { class: "text-xs text-slate-600 dark:text-slate-300", {t("schedules.location")} }
+                            input { r#type: "text", list: "locs", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().loc.clone(), oninput: move |e| { let mut w = edit_form.write(); w.loc = e.value(); } }
+                            datalist { id: "locs",
+                                for v in loc_suggestions.read().iter() { option { value: "{v}" } }
+                            }
+                        }
+                        div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                            div { class: "space-y-1",
+                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.start_datetime")} }
+                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().start_dt.clone(), oninput: move |e| { let mut w = edit_form.write(); w.start_dt = e.value(); } }
+                            }
+                            div { class: "space-y-1",
+                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.end_datetime")} }
+                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().end_dt.clone(), oninput: move |e| { let mut w = edit_form.write(); w.end_dt = e.value(); } }
+                            }
                         }
                         div { class: "flex items-center gap-2",
                             select { class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full", value: edit_form.read().add_pid.clone(), onchange: move |e| { let mut w = edit_form.write(); w.add_pid = e.value(); },
@@ -1399,44 +1418,12 @@ pub fn Shifts() -> Element {
                         }
                         {
                             let mut warns: Vec<String> = Vec::new();
-                            // Try to match a schedule by location and hours
-                            if let Some(s_full) = schedules_full.read().iter().find(|s| s.location == edit_form.read().loc && s.start_hour == edit_form.read().start && s.end_hour == edit_form.read().end) {
-                                // weekday check against schedule (index-based, locale-agnostic)
-                                if !edit_form.read().date.is_empty() {
-                                    #[cfg(not(target_arch = "wasm32"))]
-                                    {
-                                        if let Ok(d) = chrono::NaiveDate::parse_from_str(&edit_form.read().date, "%Y-%m-%d") {
-                                            let day_idx = weekday_index_for_date(d.year(), d.month(), d.day());
-                                            let sched_idx = weekday_index_from_name(&s_full.weekday);
-                                            if day_idx != sched_idx { warns.push(t("shifts.warn_weekday_mismatch")); }
-                                        }
-                                    }
-                                    #[cfg(target_arch = "wasm32")]
-                                    {
-                                        let (y,m,d) = parse_ymd(&edit_form.read().date);
-                                        let day_idx = weekday_index_for_date(y,m,d);
-                                        let sched_idx = weekday_index_from_name(&s_full.weekday);
-                                        if day_idx != sched_idx { warns.push(t("shifts.warn_weekday_mismatch")); }
-                                    }
-                                }
-                                let mut num_mgr = 0; let mut num_male = 0; let mut num_female = 0;
-                                for pid in edit_form.read().selected_pids.iter() {
-                                    if let Some(p) = publishers_all.read().iter().find(|pp| pp.id == *pid) {
-                                        if p.is_shift_manager { num_mgr += 1; }
-                                        if p.gender == "Male" { num_male += 1; } else { num_female += 1; }
-                                    }
-                                }
-                                if (num_mgr as i64) != s_full.num_shift_managers { warns.push(t("shifts.warn_mgr_count_differs")); }
-                                if (num_male as i64) < s_full.num_brothers { warns.push(t("shifts.warn_fewer_brothers")); }
-                                if (num_female as i64) < s_full.num_sisters { warns.push(t("shifts.warn_fewer_sisters")); }
-                                if (edit_form.read().selected_pids.len() as i64) != s_full.num_publishers { warns.push(t("shifts.warn_total_count_differs")); }
-                            }
-                            // availability and same-day assignment checks per publisher, excluding the current shift
-                            if !edit_form.read().date.is_empty() {
+                            if !edit_form.read().start_dt.is_empty() {
+                                let date_s = edit_form.read().start_dt.split('T').next().unwrap_or("").to_string();
                                 for pid in edit_form.read().selected_pids.iter() {
                                     #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
                                     {
-                                        if let Ok(d) = chrono::NaiveDate::parse_from_str(&edit_form.read().date, "%Y-%m-%d") {
+                                        if let Ok(d) = chrono::NaiveDate::parse_from_str(&date_s, "%Y-%m-%d") {
                                             let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
                                             if dao::is_absent_on(*pid, d).unwrap_or(false) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
                                             let day_start = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(0,0,0).unwrap());
@@ -1448,8 +1435,8 @@ pub fn Shifts() -> Element {
                                     #[cfg(target_arch = "wasm32")]
                                     {
                                         let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
-                                        if wasm_backend::is_absent_on(*pid, &edit_form.read().date) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
-                                        let existing = wasm_backend::list_shifts_between(&format!("{} 00:00:00", edit_form.read().date), &format!("{} 23:59:59", edit_form.read().date));
+                                        if wasm_backend::is_absent_on(*pid, &date_s) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
+                                        let existing = wasm_backend::list_shifts_between(&format!("{} 00:00:00", date_s), &format!("{} 23:59:59", date_s));
                                         if existing.iter().any(|sh| sh.id != edit_form.read().shift_id && sh.publishers.contains(pid)) { warns.push(format!("{} {}", name, t("shifts.warn_already_has_shift"))); }
                                     }
                                 }

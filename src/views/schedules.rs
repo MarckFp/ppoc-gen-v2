@@ -79,6 +79,7 @@ pub fn Schedules() -> Element {
     let mut list = use_signal(|| Vec::<ScheduleListItem>::new());
     let mut raw = use_signal(|| Vec::<ScheduleListItem>::new());
     let mut query = use_signal(|| String::new());
+    let mut loc_suggestions = use_signal(|| Vec::<String>::new());
     let mut modal_open = use_signal(|| false);
     let mut form = use_signal(|| ScheduleForm { id: None, location: String::new(), start_hour: "09:00".into(), end_hour: "12:00".into(), weekday: "Monday".into(), description: String::new(), num_publishers: "4".into(), num_shift_managers: "1".into(), num_brothers: "2".into(), num_sisters: "2".into() });
     let mut error = use_signal(|| Option::<String>::None);
@@ -99,6 +100,10 @@ pub fn Schedules() -> Element {
                 subtitle: format!("{}, {} {}, {} {}, {} {}, {} {}", s.weekday, s.num_publishers, t("schedules.pubs_short"), s.num_shift_managers, t("schedules.managers_short"), s.num_brothers, t("schedules.brothers"), s.num_sisters, t("schedules.sisters")),
             }).collect::<Vec<_>>();
             raw.set(mapped.clone());
+            // build unique location suggestions from mapped items' titles
+            let mut set = std::collections::BTreeSet::<String>::new();
+            for it in &mapped { if let Some((loc, _)) = it.title.split_once(" • ") { set.insert(loc.to_string()); } }
+            loc_suggestions.set(set.into_iter().collect());
             list.set(mapped);
         }
         #[cfg(target_arch = "wasm32")]
@@ -113,6 +118,9 @@ pub fn Schedules() -> Element {
                 subtitle: format!("{}, {} {}, {} {}, {} {}, {} {}", s.weekday, s.num_publishers, t("schedules.pubs_short"), s.num_shift_managers, t("schedules.managers_short"), s.num_brothers, t("schedules.brothers"), s.num_sisters, t("schedules.sisters")),
             }).collect::<Vec<_>>();
             raw.set(mapped.clone());
+            let mut set = std::collections::BTreeSet::<String>::new();
+            for it in &mapped { if let Some((loc, _)) = it.title.split_once(" • ") { set.insert(loc.to_string()); } }
+            loc_suggestions.set(set.into_iter().collect());
             list.set(mapped);
         }
     });
@@ -324,7 +332,12 @@ pub fn Schedules() -> Element {
                     h2 { class: "text-lg font-semibold", { if form.read().id.is_some() { t("schedules.edit_title") } else { t("schedules.new_title") } } }
                     { error.read().as_ref().map(|err| rsx!( p { class: "text-red-600 text-sm", {err.clone()} } )) }
                     div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        input { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: t("schedules.location"), value: form.read().location.clone(), oninput: move |e| form.write().location = e.value() }
+                        div { class: "space-y-1",
+                            input { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full", list: "schedule-locs", placeholder: t("schedules.location"), value: form.read().location.clone(), oninput: move |e| form.write().location = e.value() }
+                            datalist { id: "schedule-locs",
+                                for v in loc_suggestions.read().iter() { option { value: "{v}" } }
+                            }
+                        }
                         select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().weekday.clone(), oninput: move |e| form.write().weekday = e.value(),
                             { rsx!(
                                 for day in weekdays_for_locale() { option { value: "{day}", "{day}" } }
