@@ -1,7 +1,3 @@
-mod hero;
-pub use hero::Hero;
+// (Removed hero component in favor of configuration-based landing page)
+pub mod navbar;
 
-/*
-mod layout;
-pub use layout::Layout;
-*/

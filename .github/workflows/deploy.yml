@@ -142,7 +142,7 @@ jobs:
           esac
 
           ./$TAILWIND_NAME -i ./input.css -o ./assets/tailwind.css
-          cargo binstall dioxus-cli --version 0.7.0-alpha.2 -y
+          cargo binstall dioxus-cli --version 0.7.0-rc.0 -y
 
       - name: Build & Deploy ${{ matrix.name }} 🚀
         shell: bash

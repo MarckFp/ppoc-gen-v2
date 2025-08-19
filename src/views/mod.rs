@@ -1,5 +1,13 @@
 mod home;
+mod publishers;
+mod absences;
+mod schedules;
+mod shifts;
+mod configuration;
+mod landpage;
 pub use home::Home;
-
-mod blog;
-pub use blog::Blog;
+pub use publishers::Publishers;
+pub use absences::Absences;
+pub use schedules::Schedules;
+pub use shifts::Shifts;
+pub use configuration::Configuration;

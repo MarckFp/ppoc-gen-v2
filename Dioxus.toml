@@ -1,12 +1,12 @@
 [application]
-name = "DXApp"
+name = "PPOCGen"
 default_platform = "web"
 hot_reload = true
 
 [web.app]
-title = "DXApp"
+title = "PPOC Gen"
 [web.resource]
-style = []
+style = ["assets/tailwind.css"]
 script = []
 [web.resource.dev]
 script = []
@@ -14,13 +14,13 @@ script = []
 level = "z"
 [web.watcher]
 index_on_404 = true
-watch_path = ["src"]
+watch_path = ["src", "assets"]
 
 #------------------------------------------
 # Bundler
 #------------------------------------------
 [bundle]
-identifier = "io.github.dxapp"
+identifier = "io.github.ppocgen"
 publisher = "MarckFp"
 copyright = ""
 category = "Utility"

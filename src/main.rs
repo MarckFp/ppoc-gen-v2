@@ -1,28 +1,67 @@
 #![cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 
 use dioxus::prelude::*;
+mod i18n;
 // Components
-use views::{Blog, Home};
+use views::{Home, Publishers, Absences, Schedules, Shifts, Configuration};
+// Static web: use wasm local storage backend for configuration detection
+#[cfg(target_arch = "wasm32")] use crate::db::wasm_store as backend;
+#[cfg(not(target_arch = "wasm32"))] mod backend { pub fn configuration_is_set() -> bool { true } }
 
 mod components;
 mod views;
+mod db; // universal db facade (native sqlite or wasm storage)
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
     #[route("/")]
     Home {},
-    #[route("/blog/:id")]
-    Blog { id: i32 },
+    #[route("/publishers")]
+    Publishers {},
+    #[route("/absences")]
+    Absences {},
+    #[route("/schedules")]
+    Schedules {},
+    #[route("/shifts")]
+    Shifts {},
+    #[route("/configuration")]
+    Configuration {},
 }
 
-fn main() {
-    dioxus::launch(App);
-}
+fn main() { dioxus::launch(App); }
 
 #[component]
 fn App() -> Element {
+    // For static site (wasm), determine if initial configuration exists
+    let configured = use_signal(|| backend::configuration_is_set());
+    // Provide context so Landpage can flip it after user saves configuration
+    provide_context(configured);
+    // Provide i18n context (reads initial language/date from configuration if present)
+    i18n::provide_i18n_from_config();
+
+    // Apply theme based on saved configuration (web/native)
+    use_effect(move || {
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Some(cfg) = backend::get_configuration() { i18n::apply_theme(&cfg.theme); }
+            else { i18n::apply_theme("System"); }
+        }
+        #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+        {
+            if let Ok(cfg) = crate::db::dao::get_configuration() { i18n::apply_theme(&cfg.theme); }
+            else { i18n::apply_theme("System"); }
+        }
+        #[cfg(all(not(target_arch = "wasm32"), not(feature = "native-db")))]
+        {
+            i18n::apply_theme("System");
+        }
+    });
+
     rsx! {
+        document::Stylesheet {
+            href: asset!("/assets/tailwind.css")
+        }
         head {
             document::Meta { name: "description", content: "Dioxus template project" }
             document::Link { rel: "icon", href: asset!("/assets/icons/favicon.ico") }
@@ -41,9 +80,10 @@ fn App() -> Element {
                 href: asset!("/assets/icons/apple-touch-icon.png"),
                 sizes: "180x180",
             }
-            document::Stylesheet { href: asset!("/assets/styling/main.css") }
-            document::Stylesheet { href: asset!("/assets/tailwind.css") }
+
         }
-        Router::<Route> {}
+        div { class: "app-layout flex min-h-screen",
+            main { class: "main-content flex-1 p-8 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100", Router::<Route> {} }
+        }
     }
 }
