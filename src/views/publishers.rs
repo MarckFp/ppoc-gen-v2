@@ -92,9 +92,10 @@ fn normalize_for_search(s: &str) -> String {
          .replace('ñ', "n")
 }
 
+#[allow(unused_mut)]
 #[component]
 pub fn Publishers() -> Element {
-    let list = use_signal(|| Vec::<Publisher>::new());
+    let mut list = use_signal(|| Vec::<Publisher>::new());
     let mut query = use_signal(|| String::new());
     let mut modal_open = use_signal(|| false);
     let mut form = use_signal(|| PublisherForm { id: None, first_name: String::new(), last_name: String::new(), gender: "Male".into(), is_shift_manager: false, priority: "5".into() });
@@ -104,7 +105,7 @@ pub fn Publishers() -> Element {
     let mut confirm_action = use_signal(|| Option::<ConfirmAction>::None);
     let mut select_mode = use_signal(|| false);
     // schedules list (id, label) and availability selected for current form
-    let schedules = use_signal(|| Vec::<(i64, String)>::new());
+    let mut schedules = use_signal(|| Vec::<(i64, String)>::new());
     let mut avail_selected = use_signal(|| Vec::<i64>::new());
     // Relationships state for the current form
     let mut rel_selected = use_signal(|| Vec::<(i64, String)>::new()); // (other_id, kind: 'recommended'|'mandatory')
@@ -287,7 +288,7 @@ pub fn Publishers() -> Element {
     clear_selection();
     };
 
-    let delete_publisher = move |id: i64| {
+    let mut delete_publisher = move |id: i64| {
         #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
         {
             if dao::delete_publisher(id).is_ok() {
