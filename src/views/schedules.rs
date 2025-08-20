@@ -235,18 +235,31 @@ pub fn Schedules() -> Element {
         div { class: "min-h-[70vh] flex items-start justify-center",
             div { class: "w-full max-w-2xl mx-auto space-y-5",
                 div { class: "flex items-center justify-between",
-                    a { href: "/", class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                    a {
+                        href: "/",
+                        class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
                         span { "←" }
                         span { class: "hidden sm:inline", {t("nav.home")} }
                     }
-                    button { class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition", onclick: open_create,
-                        span { "➕" } span { class: "hidden sm:inline", {t("common.new")} }
+                    button {
+                        class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition",
+                        onclick: open_create,
+                        span { "➕" }
+                        span { class: "hidden sm:inline", {t("common.new")} }
                     }
                 }
                 div { class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-4 sm:p-5 space-y-4",
                     div { class: "flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between",
                         h1 { class: "text-xl sm:text-2xl font-semibold", {t("nav.schedules")} }
-                        input { class: "h-10 w-full sm:w-64 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: t("common.search_placeholder"), value: query.read().clone(), oninput: move |e| { query.set(e.value()); apply_filter(); } }
+                        input {
+                            class: "h-10 w-full sm:w-64 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            placeholder: t("common.search_placeholder"),
+                            value: query.read().clone(),
+                            oninput: move |e| {
+                                query.set(e.value());
+                                apply_filter();
+                            },
+                        }
                     }
                     {
                         let all_items = list.read().clone();
@@ -258,57 +271,115 @@ pub fn Schedules() -> Element {
                         let page_items = all_items[start..end].to_vec();
                         let page_ids: Vec<i64> = page_items.iter().map(|p| p.id).collect();
                         let sel = selected.read().clone();
-                        let all_selected_on_page = !page_ids.is_empty() && page_ids.iter().all(|id| sel.contains(id));
+                        let all_selected_on_page = !page_ids.is_empty()
 
-                        rsx!(
                             // controls row
+                            // left: selection toggle and conditional select-all and bulk delete
+                            // right: pagination controls
+                            // List
+                            && page_ids.iter().all(|id| sel.contains(id));
+                        rsx! {
                             div { class: "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between",
-                                // left: selection toggle and conditional select-all and bulk delete
                                 div { class: "flex items-center gap-3",
-                                    button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| select_mode.set(!select_mode()), { if select_mode() { t("common.done") } else { t("common.select") } } }
-                                    { select_mode().then(|| rsx!(
+                                    button {
+                                        class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                                        onclick: move |_| select_mode.set(!select_mode()),
+                                        {if select_mode() { t("common.done") } else { t("common.select") }}
+                                    }
+                                    {select_mode().then(|| rsx! {
                                         div { class: "flex items-center gap-3",
                                             label { class: "inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300",
-                                                input { r#type: "checkbox", checked: all_selected_on_page, onchange: move |e| {
-                                                    let check = e.value().parse::<bool>().unwrap_or(false);
-                                                    let mut v = selected.read().clone();
-                                                    if check { for id in page_ids.clone() { if !v.contains(&id) { v.push(id); } } } else { v.retain(|id| !page_ids.contains(id)); }
-                                                    selected.set(v);
-                                                } }
+                                                input {
+                                                    r#type: "checkbox",
+                                                    checked: all_selected_on_page,
+                                                    onchange: move |e| {
+                                                        let check = e.value().parse::<bool>().unwrap_or(false);
+                                                        let mut v = selected.read().clone();
+                                                        if check {
+                                                            for id in page_ids.clone() {
+                                                                if !v.contains(&id) {
+                                                                    v.push(id);
+                                                                }
+                                                            }
+                                                        } else {
+                                                            v.retain(|id| !page_ids.contains(id));
+                                                        }
+                                                        selected.set(v);
+                                                    },
+                                                }
                                                 span { {t("common.select_all_page")} }
                                             }
-                                            { (selected.read().len() > 0).then(|| rsx!(
-                                                button { class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
-                                                    onclick: move |_| confirm_action.set(Some(ConfirmAction::DeleteMany(selected.read().clone()))),
-                                                    span { "🗑️" } span { class: "hidden sm:inline", {format!("{} ({})", t("common.delete_selected"), selected.read().len())} }
+                                            {(selected.read().len() > 0).then(|| rsx! {
+                                                button {
+                                                    class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                                                    onclick: move |_| {
+                                                        confirm_action.set(Some(ConfirmAction::DeleteMany(selected.read().clone())))
+                                                    },
+                                                    span { "🗑️" }
+                                                    span { class: "hidden sm:inline",
+                                                        {format!("{} ({})", t("common.delete_selected"), selected.read().len())}
+                                                    }
                                                 }
-                                            )) }
+                                            })}
                                         }
-                                    )) }
+                                    })}
                                 }
-                                // right: pagination controls
                                 div { class: "flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300",
-                                    span { {format!("{}–{} {} {}", if total==0 {0} else {start+1}, end, t("common.of"), total)} }
+                                    span {
+                                        {
+                                            format!(
+                                                "{}–{} {} {}",
+                                                if total == 0 { 0 } else { start + 1 },
+                                                end,
+                                                t("common.of"),
+                                                total,
+                                            )
+                                        }
+                                    }
                                     div { class: "flex items-center gap-1",
-                                        button { class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50", disabled: page == 0,
-                                            onclick: move |_| { if page > 0 { current_page.set(page - 1); } }, {t("common.prev")} }
-                                        button { class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50", disabled: page+1 >= pages,
-                                            onclick: move |_| { if page + 1 < pages { current_page.set(page + 1); } }, {t("common.next")} }
+                                        button {
+                                            class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50",
+                                            disabled: page == 0,
+                                            onclick: move |_| {
+                                                if page > 0 {
+                                                    current_page.set(page - 1);
+                                                }
+                                            },
+                                            {t("common.prev")}
+                                        }
+                                        button {
+                                            class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50",
+                                            disabled: page + 1 >= pages,
+                                            onclick: move |_| {
+                                                if page + 1 < pages {
+                                                    current_page.set(page + 1);
+                                                }
+                                            },
+                                            {t("common.next")}
+                                        }
                                     }
                                 }
                             }
-                            // List
                             {
                                 if page_items.is_empty() {
-                                    rsx!( div { class: "text-sm text-slate-600 dark:text-slate-300", {t("schedules.empty")} } )
+                                    rsx! {
+                                        div { class: "text-sm text-slate-600 dark:text-slate-300", {t("schedules.empty")} }
+                                    }
                                 } else {
-                                    rsx!(
+                                    rsx! {
                                         ul { class: "divide-y divide-slate-200 dark:divide-slate-700",
                                             for p in page_items.into_iter() {
                                                 li { class: "py-3 flex items-center justify-between gap-3",
                                                     div { class: "flex items-center gap-3 min-w-0 w-full",
-                                                        { select_mode().then(|| rsx!( input { r#type: "checkbox", checked: is_selected(p.id), onchange: move |_| toggle_selected(p.id) } )) }
-                                                        div { class: "min-w-0 flex-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2",
+                                                        {select_mode().then(|| rsx! {
+                                                            input {
+                                                                r#type: "checkbox",
+                                                                checked: is_selected(p.id),
+                                                                onchange: move |_| toggle_selected(p.id),
+                                                            }
+                                                        })}
+                                                        div {
+                                                            class: "min-w-0 flex-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2",
                                                             onclick: move |_| open_edit_id(p.id),
                                                             div { class: "font-medium text-slate-800 dark:text-slate-100", {p.title.clone()} }
                                                             div { class: "text-xs text-slate-500", {p.subtitle.clone()} }
@@ -317,95 +388,286 @@ pub fn Schedules() -> Element {
                                                 }
                                             }
                                         }
-                                    )
+                                    }
                                 }
                             }
-                        )
+                        }
                     }
                 }
             }
         }
 
-        { modal_open().then(|| rsx!(
+        {modal_open().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
-                    h2 { class: "text-lg font-semibold", { if form.read().id.is_some() { t("schedules.edit_title") } else { t("schedules.new_title") } } }
-                    { error.read().as_ref().map(|err| rsx!( p { class: "text-red-600 text-sm", {err.clone()} } )) }
-                    div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        div { class: "space-y-1",
-                            input { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full", list: "schedule-locs", placeholder: t("schedules.location"), value: form.read().location.clone(), oninput: move |e| form.write().location = e.value() }
-                            datalist { id: "schedule-locs",
-                                for v in loc_suggestions.read().iter() { option { value: "{v}" } }
+                    h2 { class: "text-lg font-semibold",
+                        {
+                            if form.read().id.is_some() {
+                                t("schedules.edit_title")
+                            } else {
+                                t("schedules.new_title")
                             }
                         }
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().weekday.clone(), oninput: move |e| form.write().weekday = e.value(),
-                            { rsx!(
-                                for day in weekdays_for_locale() { option { value: "{day}", "{day}" } }
-                            ) }
+                    }
+                    {error.read().as_ref().map(|err| rsx! {
+                        p { class: "text-red-600 text-sm", {err.clone()} }
+                    })}
+                    div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                        div { class: "space-y-1",
+                            input {
+                                class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full",
+                                list: "schedule-locs",
+                                placeholder: t("schedules.location"),
+                                value: form.read().location.clone(),
+                                oninput: move |e| form.write().location = e.value(),
+                            }
+                            datalist { id: "schedule-locs",
+                                for v in loc_suggestions.read().iter() {
+                                    option { value: "{v}" }
+                                }
+                            }
+                        }
+                        select {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: form.read().weekday.clone(),
+                            oninput: move |e| form.write().weekday = e.value(),
+                            {
+                                rsx! {
+                                    for day in weekdays_for_locale() {
+                                        option { value: "{day}", "{day}" }
+                                    }
+                                }
+                            }
                         }
                     }
                     div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        input { r#type: "time", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: t("schedules.start"), value: form.read().start_hour.clone(), oninput: move |e| form.write().start_hour = e.value() }
-                        input { r#type: "time", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: t("schedules.end"), value: form.read().end_hour.clone(), oninput: move |e| form.write().end_hour = e.value() }
+                        input {
+                            r#type: "time",
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            placeholder: t("schedules.start"),
+                            value: form.read().start_hour.clone(),
+                            oninput: move |e| form.write().start_hour = e.value(),
+                        }
+                        input {
+                            r#type: "time",
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            placeholder: t("schedules.end"),
+                            value: form.read().end_hour.clone(),
+                            oninput: move |e| form.write().end_hour = e.value(),
+                        }
                     }
-                    textarea { class: "rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full h-20", placeholder: t("schedules.description_optional"), value: form.read().description.clone(), oninput: move |e| form.write().description = e.value() }
+                    textarea {
+                        class: "rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full h-20",
+                        placeholder: t("schedules.description_optional"),
+                        value: form.read().description.clone(),
+                        oninput: move |e| form.write().description = e.value(),
+                    }
                     div { class: "grid grid-cols-2 gap-3",
-                        div { class: "flex items-center gap-2", label { class: "text-sm", {t("schedules.publishers")} } input { r#type: "number", min: "0", class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().num_publishers.clone(), oninput: move |e| form.write().num_publishers = e.value() } }
-                        div { class: "flex items-center gap-2", label { class: "text-sm", {t("schedules.managers")} } input { r#type: "number", min: "0", class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().num_shift_managers.clone(), oninput: move |e| form.write().num_shift_managers = e.value() } }
-                        div { class: "flex items-center gap-2", label { class: "text-sm", {t("schedules.brothers")} } input { r#type: "number", min: "0", class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().num_brothers.clone(), oninput: move |e| form.write().num_brothers = e.value() } }
-                        div { class: "flex items-center gap-2", label { class: "text-sm", {t("schedules.sisters")} } input { r#type: "number", min: "0", class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().num_sisters.clone(), oninput: move |e| form.write().num_sisters = e.value() } }
+                        div { class: "flex items-center gap-2",
+                            label { class: "text-sm", {t("schedules.publishers")} }
+                            input {
+                                r#type: "number",
+                                min: "0",
+                                class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                                value: form.read().num_publishers.clone(),
+                                oninput: move |e| form.write().num_publishers = e.value(),
+                            }
+                        }
+                        div { class: "flex items-center gap-2",
+                            label { class: "text-sm", {t("schedules.managers")} }
+                            input {
+                                r#type: "number",
+                                min: "0",
+                                class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                                value: form.read().num_shift_managers.clone(),
+                                oninput: move |e| form.write().num_shift_managers = e.value(),
+                            }
+                        }
+                        div { class: "flex items-center gap-2",
+                            label { class: "text-sm", {t("schedules.brothers")} }
+                            input {
+                                r#type: "number",
+                                min: "0",
+                                class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                                value: form.read().num_brothers.clone(),
+                                oninput: move |e| form.write().num_brothers = e.value(),
+                            }
+                        }
+                        div { class: "flex items-center gap-2",
+                            label { class: "text-sm", {t("schedules.sisters")} }
+                            input {
+                                r#type: "number",
+                                min: "0",
+                                class: "h-10 w-24 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                                value: form.read().num_sisters.clone(),
+                                oninput: move |e| form.write().num_sisters = e.value(),
+                            }
+                        }
                     }
                     div { class: "flex items-center justify-between gap-2",
-                        { form.read().id.map(|eid| rsx!( button { class: "inline-flex items-center h-9 px-3 rounded-md border border-red-300 text-red-700 text-sm font-medium transition",
-                            onclick: move |_| { confirm_action.set(Some(ConfirmAction::DeleteOne(eid))); }, {t("common.delete")} } )) }
+                        {form.read().id.map(|eid| rsx! {
+                            button {
+                                class: "inline-flex items-center h-9 px-3 rounded-md border border-red-300 text-red-700 text-sm font-medium transition",
+                                onclick: move |_| {
+                                    confirm_action.set(Some(ConfirmAction::DeleteOne(eid)));
+                                },
+                                {t("common.delete")}
+                            }
+                        })}
                         div { class: "flex items-center gap-2",
-                            button { class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition", onclick: move |_| modal_open.set(false), {t("common.cancel")} }
-                            button { class: "inline-flex items-center h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition", onclick: on_submit, { if form.read().id.is_some() { t("common.save") } else { t("common.create") } } }
+                            button {
+                                class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                                onclick: move |_| modal_open.set(false),
+                                {t("common.cancel")}
+                            }
+                            button {
+                                class: "inline-flex items-center h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition",
+                                onclick: on_submit,
+                                {if form.read().id.is_some() { t("common.save") } else { t("common.create") }}
+                            }
                         }
                     }
                 }
             }
-        )) }
+        })}
 
         // Confirm modal
-        { confirm_action.read().as_ref().map(|action| {
-            let message = match action {
-                ConfirmAction::DeleteOne(_id) => t("schedules.confirm_delete_one"),
-                ConfirmAction::DeleteMany(ids) => format!("{} ({})", t("schedules.confirm_delete_many"), ids.len()),
-            };
-            rsx!(
-                div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
-                    div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
-                        h2 { class: "text-lg font-semibold", {t("common.confirm_delete_title")} }
-                        p { class: "text-sm text-slate-600 dark:text-slate-300", {message} }
-                        div { class: "flex items-center justify-end gap-2",
-                            button { class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
-                                onclick: move |_| confirm_action.set(None), {t("common.cancel")} }
-                            button { class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
-                                onclick: move |_| {
-                                    let act = confirm_action.read().clone();
-                                    match act {
-                                        Some(ConfirmAction::DeleteOne(id)) => {
-                                            delete_schedule(id);
-                                            let mut v = selected.read().clone(); v.retain(|x| *x != id); selected.set(v);
-                                        }
-                                        Some(ConfirmAction::DeleteMany(_ids)) => {
-                                            #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
-                                            { for id in _ids.iter().copied() { let _ = dao::delete_schedule(id); } if let Ok(mut items) = dao::list_schedules() { let week_start = dao::get_configuration().ok().map(|c| c.week_start).unwrap_or_else(|| "monday".into()); let order = weekday_order_list(&week_start); items.sort_by(|a, b| weekday_rank(&a.weekday, &order).cmp(&weekday_rank(&b.weekday, &order)).then(a.start_hour.cmp(&b.start_hour))); let mapped = items.into_iter().map(|s: NativeSchedule| ScheduleListItem { id: s.id, title: format!("{} • {}–{}", s.location, s.start_hour, s.end_hour), subtitle: format!("{}, {} {}, {} {}, {} {}, {} {}", s.weekday, s.num_publishers, t("schedules.pubs_short"), s.num_shift_managers, t("schedules.managers_short"), s.num_brothers, t("schedules.brothers"), s.num_sisters, t("schedules.sisters")) }).collect::<Vec<_>>(); raw.set(mapped.clone()); list.set(mapped); } }
-                                            #[cfg(target_arch = "wasm32")]
-                                            { for id in _ids.iter().copied() { wasm_backend::delete_schedule(id); } let mut items = wasm_backend::list_schedules(); let week_start = wasm_backend::get_configuration().map(|c| c.week_start).unwrap_or_else(|| "monday".into()); let order = weekday_order_list(&week_start); items.sort_by(|a, b| weekday_rank(&a.weekday, &order).cmp(&weekday_rank(&b.weekday, &order)).then(a.start_hour.cmp(&b.start_hour))); let mapped = items.into_iter().map(|s: WebSchedule| ScheduleListItem { id: s.id, title: format!("{} • {}–{}", s.location, s.start_hour, s.end_hour), subtitle: format!("{}, {} {}, {} {}, {} {}, {} {}", s.weekday, s.num_publishers, t("schedules.pubs_short"), s.num_shift_managers, t("schedules.managers_short"), s.num_brothers, t("schedules.brothers"), s.num_sisters, t("schedules.sisters")) }).collect::<Vec<_>>(); raw.set(mapped.clone()); list.set(mapped); }
-                                            selected.set(vec![]);
-                                        }
-                                        None => {}
+        {
+            confirm_action
+                .read()
+                .as_ref()
+                .map(|action| {
+                    let message = match action {
+                        ConfirmAction::DeleteOne(_id) => t("schedules.confirm_delete_one"),
+                        ConfirmAction::DeleteMany(ids) => {
+                            format!("{} ({})", t("schedules.confirm_delete_many"), ids.len())
+                        }
+                    };
+                    rsx! {
+                        div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+                            div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
+                                h2 { class: "text-lg font-semibold", {t("common.confirm_delete_title")} }
+                                p { class: "text-sm text-slate-600 dark:text-slate-300", {message} }
+                                div { class: "flex items-center justify-end gap-2",
+                                    button {
+                                        class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                                        onclick: move |_| confirm_action.set(None),
+                                        {t("common.cancel")}
                                     }
-                                    confirm_action.set(None);
-                                },
-                                span { "🗑️" } span { class: "hidden sm:inline", {t("common.delete")} }
+                                    button {
+                                        class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                                        onclick: move |_| {
+                                            let act = confirm_action.read().clone();
+                                            match act {
+                                                Some(ConfirmAction::DeleteOne(id)) => {
+                                                    delete_schedule(id);
+                                                    let mut v = selected.read().clone();
+                                                    v.retain(|x| *x != id);
+                                                    selected.set(v);
+                                                }
+                                                Some(ConfirmAction::DeleteMany(_ids)) => {
+                                                    #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+                                                    {
+                                                        for id in _ids.iter().copied() {
+                                                            let _ = dao::delete_schedule(id);
+                                                        }
+                                                        if let Ok(mut items) = dao::list_schedules() {
+                                                            let week_start = dao::get_configuration()
+                                                                .ok()
+                                                                .map(|c| c.week_start)
+                                                                .unwrap_or_else(|| "monday".into());
+                                                            let order = weekday_order_list(&week_start);
+                                                            items
+                                                                .sort_by(|a, b| {
+                                                                    weekday_rank(&a.weekday, &order)
+                                                                        .cmp(&weekday_rank(&b.weekday, &order))
+                                                                        .then(a.start_hour.cmp(&b.start_hour))
+                                                                });
+                                                            let mapped = items
+                                                                .into_iter()
+                                                                .map(|s: NativeSchedule| ScheduleListItem {
+                                                                    id: s.id,
+                                                                    title: format!(
+                                                                        "{} • {}–{}",
+                                                                        s.location,
+                                                                        s.start_hour,
+                                                                        s.end_hour,
+                                                                    ),
+                                                                    subtitle: format!(
+                                                                        "{}, {} {}, {} {}, {} {}, {} {}",
+                                                                        s.weekday,
+                                                                        s.num_publishers,
+                                                                        t("schedules.pubs_short"),
+                                                                        s.num_shift_managers,
+                                                                        t("schedules.managers_short"),
+                                                                        s.num_brothers,
+                                                                        t("schedules.brothers"),
+                                                                        s.num_sisters,
+                                                                        t("schedules.sisters"),
+                                                                    ),
+                                                                })
+                                                                .collect::<Vec<_>>();
+                                                            raw.set(mapped.clone());
+                                                            list.set(mapped);
+                                                        }
+                                                    }
+                                                    #[cfg(target_arch = "wasm32")]
+                                                    {
+                                                        for id in _ids.iter().copied() {
+                                                            wasm_backend::delete_schedule(id);
+                                                        }
+                                                        let mut items = wasm_backend::list_schedules();
+                                                        let week_start = wasm_backend::get_configuration()
+                                                            .map(|c| c.week_start)
+                                                            .unwrap_or_else(|| "monday".into());
+                                                        let order = weekday_order_list(&week_start);
+                                                        items
+                                                            .sort_by(|a, b| {
+                                                                weekday_rank(&a.weekday, &order)
+                                                                    .cmp(&weekday_rank(&b.weekday, &order))
+                                                                    .then(a.start_hour.cmp(&b.start_hour))
+                                                            });
+                                                        let mapped = items
+                                                            .into_iter()
+                                                            .map(|s: WebSchedule| ScheduleListItem {
+                                                                id: s.id,
+                                                                title: format!(
+                                                                    "{} • {}–{}",
+                                                                    s.location,
+                                                                    s.start_hour,
+                                                                    s.end_hour,
+                                                                ),
+                                                                subtitle: format!(
+                                                                    "{}, {} {}, {} {}, {} {}, {} {}",
+                                                                    s.weekday,
+                                                                    s.num_publishers,
+                                                                    t("schedules.pubs_short"),
+                                                                    s.num_shift_managers,
+                                                                    t("schedules.managers_short"),
+                                                                    s.num_brothers,
+                                                                    t("schedules.brothers"),
+                                                                    s.num_sisters,
+                                                                    t("schedules.sisters"),
+                                                                ),
+                                                            })
+                                                            .collect::<Vec<_>>();
+                                                        raw.set(mapped.clone());
+                                                        list.set(mapped);
+                                                    }
+                                                    selected.set(vec![]);
+                                                }
+                                                None => {}
+                                            }
+                                            confirm_action.set(None);
+                                        },
+                                        span { "🗑️" }
+                                        span { class: "hidden sm:inline", {t("common.delete")} }
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            )
-        }) }
+                })
+        }
     }
 }

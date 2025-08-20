@@ -171,16 +171,18 @@ pub fn Configuration() -> Element {
     let import_box = {
         // Hidden file input; when a file is chosen, open confirmation modal
         let mut confirm_copy = confirm_import.clone();
-        rsx!( input {
-            id: "importFile",
-            r#type: "file",
-            accept: ".json",
-            class: "hidden",
-            onchange: move |_| {
-                // Only on web will this be useful, native path uses default file
-                confirm_copy.set(true);
+        rsx!(
+            input {
+                id: "importFile",
+                r#type: "file",
+                accept: ".json",
+                class: "hidden",
+                onchange: move |_| {
+                    // Only on web will this be useful, native path uses default file
+                    confirm_copy.set(true);
+                },
             }
-        })
+        )
     };
 
     rsx! {
@@ -188,7 +190,9 @@ pub fn Configuration() -> Element {
         div { class: "min-h-[70vh] flex items-center justify-center",
             div { class: "w-full max-w-lg mx-auto space-y-6",
                 div { class: "flex items-center justify-between",
-                    a { href: "/", class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                    a {
+                        href: "/",
+                        class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
                         span { "←" }
                         span { class: "hidden sm:inline", {t("nav.home")} }
                     }
@@ -196,30 +200,53 @@ pub fn Configuration() -> Element {
                 div { class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-5 sm:p-6 space-y-5",
                     div { class: "space-y-1",
                         h1 { class: "text-xl sm:text-2xl font-semibold", {t("config.title")} }
-                        p { class: "text-sm text-slate-600 dark:text-slate-300", {t("config.subtitle")} }
+                        p { class: "text-sm text-slate-600 dark:text-slate-300",
+                            {t("config.subtitle")}
+                        }
                     }
                     div { class: "flex flex-col gap-2",
-                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200", {t("landpage.name")} }
-                        input { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: name.read().clone(), oninput: move |e| name.set(e.value()) }
+                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            {t("landpage.name")}
+                        }
+                        input {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: name.read().clone(),
+                            oninput: move |e| name.set(e.value()),
+                        }
                     }
                     div { class: "flex flex-col gap-2",
-                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200", {t("landpage.theme")} }
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: theme.read().clone(), oninput: move |e| theme.set(e.value()),
+                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            {t("landpage.theme")}
+                        }
+                        select {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: theme.read().clone(),
+                            oninput: move |e| theme.set(e.value()),
                             option { value: "System", {t("common.system")} }
                             option { value: "Light", {t("common.light")} }
                             option { value: "Dark", {t("common.dark")} }
                         }
                     }
                     div { class: "flex flex-col gap-2",
-                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200", {t("config.name_order")} }
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: name_order.read().clone(), oninput: move |e| name_order.set(e.value()),
+                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            {t("config.name_order")}
+                        }
+                        select {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: name_order.read().clone(),
+                            oninput: move |e| name_order.set(e.value()),
                             option { value: "first_last", {t("config.name_order_first_last")} }
                             option { value: "last_first", {t("config.name_order_last_first")} }
                         }
                     }
                     div { class: "flex flex-col gap-2",
-                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200", {t("config.language")} }
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: language.read().clone(), oninput: move |e| language.set(e.value()),
+                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            {t("config.language")}
+                        }
+                        select {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: language.read().clone(),
+                            oninput: move |e| language.set(e.value()),
                             option { value: "system", "System" }
                             option { value: "en", "English" }
                             option { value: "es", "Español" }
@@ -228,8 +255,13 @@ pub fn Configuration() -> Element {
                         }
                     }
                     div { class: "flex flex-col gap-2",
-                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200", {t("config.date_format")} }
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: date_format.read().clone(), oninput: move |e| date_format.set(e.value()),
+                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            {t("config.date_format")}
+                        }
+                        select {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: date_format.read().clone(),
+                            oninput: move |e| date_format.set(e.value()),
                             option { value: "YYYY-MM-DD", "YYYY-MM-DD (2025-06-01)" }
                             option { value: "DD/MM/YYYY", "DD/MM/YYYY (01/06/2025)" }
                             option { value: "MM/DD/YYYY", "MM/DD/YYYY (06/01/2025)" }
@@ -237,75 +269,122 @@ pub fn Configuration() -> Element {
                         }
                     }
                     div { class: "flex flex-col gap-2",
-                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200", {t("config.week_start")} }
-                        select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: week_start.read().clone(), oninput: move |e| week_start.set(e.value()),
+                        label { class: "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            {t("config.week_start")}
+                        }
+                        select {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            value: week_start.read().clone(),
+                            oninput: move |e| week_start.set(e.value()),
                             option { value: "monday", {t("common.monday")} }
                             option { value: "sunday", {t("common.sunday")} }
                         }
                     }
                     div { class: "flex flex-col items-stretch gap-2",
-                        button { class: "inline-flex justify-center items-center gap-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 transition disabled:opacity-50 disabled:cursor-not-allowed w-full", disabled: name.read().trim().is_empty(), onclick: on_save, {t("config.save")} }
-                        { saved().then(|| rsx!( span { class: "text-sm text-green-600 text-center", {t("config.saved")} } )) }
+                        button {
+                            class: "inline-flex justify-center items-center gap-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 transition disabled:opacity-50 disabled:cursor-not-allowed w-full",
+                            disabled: name.read().trim().is_empty(),
+                            onclick: on_save,
+                            {t("config.save")}
+                        }
+                        {saved().then(|| rsx! {
+                            span { class: "text-sm text-green-600 text-center", {t("config.saved")} }
+                        })}
                     }
                     div { class: "pt-2 border-t border-slate-200 dark:border-slate-700 mt-2 space-y-3",
-                        h2 { class: "text-sm font-semibold text-slate-700 dark:text-slate-200", {t("config.data")} }
+                        h2 { class: "text-sm font-semibold text-slate-700 dark:text-slate-200",
+                            {t("config.data")}
+                        }
                         div { class: "flex flex-col sm:flex-row gap-3 items-stretch justify-center w-full",
                             // Export button
-                            button { class: "inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 transition w-full sm:w-44 h-10", onclick: on_export,
-                                span { "⬇️" } span { class: "sm:inline", {t("config.export")} }
+                            button {
+                                class: "inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 transition w-full sm:w-44 h-10",
+                                onclick: on_export,
+                                span { "⬇️" }
+                                span { class: "sm:inline", {t("config.export")} }
                             }
                             // Import button + file input (web)
                             div { class: "flex flex-col gap-2",
-                                { import_box }
-                                button { class: "inline-flex items-center justify-center gap-2 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium px-4 py-2 transition w-full sm:w-44 h-10", onclick: on_import_click,
-                                    span { "⬆️" } span { class: "sm:inline", {t("config.import")} }
+                                {import_box}
+                                button {
+                                    class: "inline-flex items-center justify-center gap-2 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium px-4 py-2 transition w-full sm:w-44 h-10",
+                                    onclick: on_import_click,
+                                    span { "⬆️" }
+                                    span { class: "sm:inline", {t("config.import")} }
                                 }
                             }
                             // Delete all data button
-                            button { class: "inline-flex items-center justify-center gap-2 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium px-4 py-2 transition w-full sm:w-44 h-10", onclick: move |_| confirm_reset.set(true),
-                                span { "🗑️" } span { class: "sm:inline", {t("config.delete_all")} }
+                            button {
+                                class: "inline-flex items-center justify-center gap-2 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium px-4 py-2 transition w-full sm:w-44 h-10",
+                                onclick: move |_| confirm_reset.set(true),
+                                span { "🗑️" }
+                                span { class: "sm:inline", {t("config.delete_all")} }
                             }
-                            { import_error.read().as_ref().map(|e| rsx!( p { class: "text-sm text-red-600 text-center w-full", {e.clone()} } )) }
+                            {import_error.read().as_ref().map(|e| rsx! {
+                                p { class: "text-sm text-red-600 text-center w-full", {e.clone()} }
+                            })}
                         }
                     }
                 }
             }
         }
 
-        { confirm_import().then(|| rsx!(
+        {confirm_import().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("config.confirm_import_title")} }
-                    p { class: "text-sm text-slate-600 dark:text-slate-300", {t("config.confirm_import_message")} }
+                    p { class: "text-sm text-slate-600 dark:text-slate-300",
+                        {t("config.confirm_import_message")}
+                    }
                     div { class: "flex items-center justify-end gap-2",
-                        button { class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition", onclick: move |_| confirm_import.set(false), {t("common.cancel")} }
-                        button { class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition", onclick: do_import, {t("config.import")} }
+                        button {
+                            class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                            onclick: move |_| confirm_import.set(false),
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                            onclick: do_import,
+                            {t("config.import")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
 
-        { confirm_reset().then(|| rsx!(
+        // mark as not configured and send user to home so Landpage shows
+        {confirm_reset().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("config.confirm_delete_all_title")} }
-                    p { class: "text-sm text-slate-600 dark:text-slate-300", {t("config.confirm_delete_all_message")} }
+                    p { class: "text-sm text-slate-600 dark:text-slate-300",
+                        {t("config.confirm_delete_all_message")}
+                    }
                     div { class: "flex items-center justify-end gap-2",
-                        button { class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition", onclick: move |_| confirm_reset.set(false), {t("common.cancel")} }
-                        button { class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition", onclick: move |_| {
-                            if backend::reset_data() {
-                                // mark as not configured and send user to home so Landpage shows
-                                configured.set(false);
-                                confirm_reset.set(false);
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(win) = web_sys::window() { let _ = win.location().set_href("/"); }
+                        button {
+                            class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                            onclick: move |_| confirm_reset.set(false),
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                            onclick: move |_| {
+                                if backend::reset_data() {
+                                    configured.set(false);
+                                    confirm_reset.set(false);
+                                    #[cfg(target_arch = "wasm32")]
+                                    {
+                                        if let Some(win) = web_sys::window() {
+                                            let _ = win.location().set_href("/");
+                                        }
+                                    }
                                 }
-                            }
-                        }, {t("config.delete_all")} }
+                            },
+                            {t("config.delete_all")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
     }
 }

@@ -59,9 +59,7 @@ fn App() -> Element {
     });
 
     rsx! {
-        document::Stylesheet {
-            href: asset!("/assets/tailwind.css")
-        }
+        document::Stylesheet { href: asset!("/assets/tailwind.css") }
         head {
             document::Meta { name: "description", content: "Dioxus template project" }
             document::Link { rel: "icon", href: asset!("/assets/icons/favicon.ico") }
@@ -80,10 +78,12 @@ fn App() -> Element {
                 href: asset!("/assets/icons/apple-touch-icon.png"),
                 sizes: "180x180",
             }
-
+        
         }
         div { class: "app-layout flex min-h-screen",
-            main { class: "main-content flex-1 p-8 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100", Router::<Route> {} }
+            main { class: "main-content flex-1 p-8 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100",
+                Router::<Route> {}
+            }
         }
     }
 }

@@ -308,18 +308,31 @@ pub fn Publishers() -> Element {
         div { class: "min-h-[70vh] flex items-start justify-center",
             div { class: "w-full max-w-2xl mx-auto space-y-5",
                 div { class: "flex items-center justify-between",
-                    a { href: "/", class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                    a {
+                        href: "/",
+                        class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
                         span { "←" }
                         span { class: "hidden sm:inline", {t("nav.home")} }
                     }
-                    button { class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition", onclick: open_create,
-                        span { "➕" } span { class: "hidden sm:inline", {t("common.new")} }
+                    button {
+                        class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition",
+                        onclick: open_create,
+                        span { "➕" }
+                        span { class: "hidden sm:inline", {t("common.new")} }
                     }
                 }
                 div { class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-4 sm:p-5 space-y-4",
                     div { class: "flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between",
                         h1 { class: "text-xl sm:text-2xl font-semibold", {t("nav.publishers")} }
-                        input { class: "h-10 w-full sm:w-64 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: t("common.search_placeholder"), value: query.read().clone(), oninput: move |e| { query.set(e.value()); current_page.set(0); } }
+                        input {
+                            class: "h-10 w-full sm:w-64 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            placeholder: t("common.search_placeholder"),
+                            value: query.read().clone(),
+                            oninput: move |e| {
+                                query.set(e.value());
+                                current_page.set(0);
+                            },
+                        }
                     }
                     {
                         // selection + bulk actions + pagination header bar
@@ -332,169 +345,330 @@ pub fn Publishers() -> Element {
                         let page_items = all_items[start..end].to_vec();
                         let page_ids: Vec<i64> = page_items.iter().map(|p| p.id).collect();
                         let sel = selected.read().clone();
-                        let all_selected_on_page = !page_ids.is_empty() && page_ids.iter().all(|id| sel.contains(id));
+                        let all_selected_on_page = !page_ids.is_empty()
 
-                        rsx!(
                             // controls row
+                            // left: selection toggle + (conditional) select-all and bulk delete
+                            // right: pagination controls
+                            // List
+                            && page_ids.iter().all(|id| sel.contains(id));
+                        rsx! {
                             div { class: "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between",
-                                // left: selection toggle + (conditional) select-all and bulk delete
                                 div { class: "flex items-center gap-3",
-                                    button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| select_mode.set(!select_mode()), { if select_mode() { t("common.done") } else { t("common.select") } } }
-                                    { select_mode().then(|| rsx!(
+                                    button {
+                                        class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                                        onclick: move |_| select_mode.set(!select_mode()),
+                                        {if select_mode() { t("common.done") } else { t("common.select") }}
+                                    }
+                                    {select_mode().then(|| rsx! {
                                         div { class: "flex items-center gap-3",
                                             label { class: "inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300",
-                                                input { r#type: "checkbox", checked: all_selected_on_page, onchange: move |e| {
-                                                    let check = e.value().parse::<bool>().unwrap_or(false);
-                                                    let mut v = selected.read().clone();
-                                                    if check { for id in page_ids.clone() { if !v.contains(&id) { v.push(id); } } } else { v.retain(|id| !page_ids.contains(id)); }
-                                                    selected.set(v);
-                                                } }
+                                                input {
+                                                    r#type: "checkbox",
+                                                    checked: all_selected_on_page,
+                                                    onchange: move |e| {
+                                                        let check = e.value().parse::<bool>().unwrap_or(false);
+                                                        let mut v = selected.read().clone();
+                                                        if check {
+                                                            for id in page_ids.clone() {
+                                                                if !v.contains(&id) {
+                                                                    v.push(id);
+                                                                }
+                                                            }
+                                                        } else {
+                                                            v.retain(|id| !page_ids.contains(id));
+                                                        }
+                                                        selected.set(v);
+                                                    },
+                                                }
                                                 span { {t("common.select_all_page")} }
                                             }
-                                            { (selected.read().len() > 0).then(|| rsx!(
-                                                button { class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
-                                                    onclick: move |_| confirm_action.set(Some(ConfirmAction::DeleteMany(selected.read().clone()))),
-                                                    span { "🗑️" } span { class: "hidden sm:inline", {format!("{} ({})", t("common.delete_selected"), selected.read().len())} }
+                                            {(selected.read().len() > 0).then(|| rsx! {
+                                                button {
+                                                    class: "inline-flex items-center gap-2 h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                                                    onclick: move |_| {
+                                                        confirm_action.set(Some(ConfirmAction::DeleteMany(selected.read().clone())))
+                                                    },
+                                                    span { "🗑️" }
+                                                    span { class: "hidden sm:inline",
+                                                        {format!("{} ({})", t("common.delete_selected"), selected.read().len())}
+                                                    }
                                                 }
-                                            )) }
+                                            })}
                                         }
-                                    )) }
+                                    })}
                                 }
-                                // right: pagination controls
                                 div { class: "flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300",
-                                    span { {format!("{}–{} {} {}", if total==0 {0} else {start+1}, end, t("common.of"), total)} }
+                                    span {
+                                        {
+                                            format!(
+                                                "{}–{} {} {}",
+                                                if total == 0 { 0 } else { start + 1 },
+                                                end,
+                                                t("common.of"),
+                                                total,
+                                            )
+                                        }
+                                    }
                                     div { class: "flex items-center gap-1",
-                                        button { class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50", disabled: page == 0,
-                                            onclick: move |_| { if page > 0 { current_page.set(page - 1); } }, {t("common.prev")} }
-                                        button { class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50", disabled: page+1 >= pages,
-                                            onclick: move |_| { if page + 1 < pages { current_page.set(page + 1); } }, {t("common.next")} }
+                                        button {
+                                            class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50",
+                                            disabled: page == 0,
+                                            onclick: move |_| {
+                                                if page > 0 {
+                                                    current_page.set(page - 1);
+                                                }
+                                            },
+                                            {t("common.prev")}
+                                        }
+                                        button {
+                                            class: "h-8 px-2 rounded-md border border-slate-300 dark:border-slate-600 disabled:opacity-50",
+                                            disabled: page + 1 >= pages,
+                                            onclick: move |_| {
+                                                if page + 1 < pages {
+                                                    current_page.set(page + 1);
+                                                }
+                                            },
+                                            {t("common.next")}
+                                        }
                                     }
                                 }
                             }
-                            // List
                             {
                                 if page_items.is_empty() {
-                                    rsx!( div { class: "text-sm text-slate-600 dark:text-slate-300", {t("publishers.empty")} } )
+                                    rsx! {
+                                        div { class: "text-sm text-slate-600 dark:text-slate-300", {t("publishers.empty")} }
+                                    }
                                 } else {
-                                    rsx!(
+                                    rsx! {
                                         ul { class: "divide-y divide-slate-200 dark:divide-slate-700",
                                             for p in page_items.into_iter() {
                                                 li { class: "py-3 flex items-center justify-between gap-3",
                                                     div { class: "flex items-center gap-3 min-w-0 w-full",
-                                                        { select_mode().then(|| rsx!( input { r#type: "checkbox", checked: is_selected(p.id), onchange: move |_| toggle_selected(p.id) } )) }
-                                                        div { class: "min-w-0 flex-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2",
+                                                        {select_mode().then(|| rsx! {
+                                                            input {
+                                                                r#type: "checkbox",
+                                                                checked: is_selected(p.id),
+                                                                onchange: move |_| toggle_selected(p.id),
+                                                            }
+                                                        })}
+                                                        div {
+                                                            class: "min-w-0 flex-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2",
                                                             onclick: move |_| open_edit_id(p.id),
-                                                            div { class: "font-medium text-slate-800 dark:text-slate-100", {
-                                                                #[cfg(target_arch = "wasm32")]
-                                                                { let order = wasm_backend::get_name_order(); if order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) } }
-                                                                #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
-                                                                { format!("{} {}", p.first_name, p.last_name) }
-                                                            } }
+                                                            div { class: "font-medium text-slate-800 dark:text-slate-100",
+                                                                {
+                                                                    #[cfg(target_arch = "wasm32")]
+                                                                    {
+                                                                        let order = wasm_backend::get_name_order();
+                                                                        if order == "last_first" {
+                                                                            format!("{} {}", p.last_name, p.first_name)
+                                                                        } else {
+                                                                            format!("{} {}", p.first_name, p.last_name)
+                                                                        }
+                                                                    }
+                                                                    #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+                                                                    { format!("{} {}", p.first_name, p.last_name) }
+                                                                }
+                                                            }
                                                             div { class: "text-xs text-slate-500 flex items-center gap-2",
                                                                 span { {if p.gender == "Male" { "♂️" } else { "♀️" }} }
-                                                                span { {
-                                                                    let gender = if p.gender == "Male" { t("publishers.gender.male") } else { t("publishers.gender.female") };
-                                                                    let mgr = if p.is_shift_manager { format!(" • {}", t("publishers.manager_short")) } else { String::new() };
-                                                                    format!("{}{} • {} {}", gender, mgr, t("publishers.priority"), p.priority)
-                                                                } }
+                                                                span {
+                                                                    {
+                                                                        let gender = if p.gender == "Male" {
+                                                                            t("publishers.gender.male")
+                                                                        } else {
+                                                                            t("publishers.gender.female")
+                                                                        };
+                                                                        let mgr = if p.is_shift_manager {
+                                                                            format!(" • {}", t("publishers.manager_short"))
+                                                                        } else {
+                                                                            String::new()
+                                                                        };
+                                                                        format!("{}{} • {} {}", gender, mgr, t("publishers.priority"), p.priority)
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
-                                    )
+                                    }
                                 }
                             }
-                        )
+                        }
                     }
                 }
             }
         }
 
-        { modal_open().then(|| rsx!(
+        // gender segmented buttons
+        // Availability section
+        // Relationships section
+        // Add control
+        // List existing relationships
+        // In-edit delete button (when editing existing)
+        {modal_open().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
-                    h2 { class: "text-lg font-semibold", { if form.read().id.is_some() { t("publishers.edit_title") } else { t("publishers.new_title") } } }
-                    { error.read().as_ref().map(|err| rsx!( p { class: "text-red-600 text-sm", {err.clone()} } )) }
+                    h2 { class: "text-lg font-semibold",
+                        {
+                            if form.read().id.is_some() {
+                                t("publishers.edit_title")
+                            } else {
+                                t("publishers.new_title")
+                            }
+                        }
+                    }
+                    {error.read().as_ref().map(|err| rsx! {
+                        p { class: "text-red-600 text-sm", {err.clone()} }
+                    })}
                     div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        input { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: {t("publishers.first_name")}, value: form.read().first_name.clone(), oninput: move |e| form.write().first_name = e.value() }
-                        input { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: {t("publishers.last_name")}, value: form.read().last_name.clone(), oninput: move |e| form.write().last_name = e.value() }
+                        input {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            placeholder: {t("publishers.first_name")},
+                            value: form.read().first_name.clone(),
+                            oninput: move |e| form.write().first_name = e.value(),
+                        }
+                        input {
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            placeholder: {t("publishers.last_name")},
+                            value: form.read().last_name.clone(),
+                            oninput: move |e| form.write().last_name = e.value(),
+                        }
                     }
                     div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        // gender segmented buttons
                         div { class: "flex items-center gap-2",
-                            button { class: { format!("h-10 px-3 rounded-md text-sm font-medium {}", if form.read().gender == "Male" { "bg-blue-600 text-white" } else { "border border-slate-300 dark:border-slate-600" }) }, onclick: move |_| form.write().gender = "Male".into(), {format!("♂️ {}", t("publishers.gender.male"))} }
-                            button { class: { format!("h-10 px-3 rounded-md text-sm font-medium {}", if form.read().gender == "Female" { "bg-blue-600 text-white" } else { "border border-slate-300 dark:border-slate-600" }) }, onclick: move |_| form.write().gender = "Female".into(), {format!("♀️ {}", t("publishers.gender.female"))} }
+                            button {
+                                class: {
+                                    format!(
+                                        "h-10 px-3 rounded-md text-sm font-medium {}",
+                                        if form.read().gender == "Male" {
+                                            "bg-blue-600 text-white"
+                                        } else {
+                                            "border border-slate-300 dark:border-slate-600"
+                                        },
+                                    )
+                                },
+                                onclick: move |_| form.write().gender = "Male".into(),
+                                {format!("♂️ {}", t("publishers.gender.male"))}
+                            }
+                            button {
+                                class: {
+                                    format!(
+                                        "h-10 px-3 rounded-md text-sm font-medium {}",
+                                        if form.read().gender == "Female" {
+                                            "bg-blue-600 text-white"
+                                        } else {
+                                            "border border-slate-300 dark:border-slate-600"
+                                        },
+                                    )
+                                },
+                                onclick: move |_| form.write().gender = "Female".into(),
+                                {format!("♀️ {}", t("publishers.gender.female"))}
+                            }
                         }
                         div { class: "flex items-center gap-2",
-                            input { r#type: "checkbox", checked: form.read().is_shift_manager, onchange: move |e| form.write().is_shift_manager = e.value().parse::<bool>().unwrap_or(false) }
+                            input {
+                                r#type: "checkbox",
+                                checked: form.read().is_shift_manager,
+                                onchange: move |e| form.write().is_shift_manager = e.value().parse::<bool>().unwrap_or(false),
+                            }
                             span { class: "text-sm", {t("publishers.shift_manager")} }
                         }
                     }
                     div { class: "grid grid-cols-1 gap-3",
                         div { class: "flex items-center gap-2",
                             label { class: "text-sm", {t("publishers.priority")} }
-                            input { class: "h-10 w-20 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", value: form.read().priority.clone(), oninput: move |e| form.write().priority = e.value() }
+                            input {
+                                class: "h-10 w-20 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                                value: form.read().priority.clone(),
+                                oninput: move |e| form.write().priority = e.value(),
+                            }
                         }
                     }
-                    // Availability section
                     div { class: "space-y-2",
-                        h3 { class: "text-sm font-semibold text-slate-700 dark:text-slate-200", {t("publishers.availability")} }
+                        h3 { class: "text-sm font-semibold text-slate-700 dark:text-slate-200",
+                            {t("publishers.availability")}
+                        }
                         {
                             let schs = schedules.read().clone();
                             if schs.is_empty() {
-                                rsx!( p { class: "text-sm text-slate-500", {t("publishers.no_schedules_yet")} } )
+                                rsx! {
+                                    p { class: "text-sm text-slate-500", {t("publishers.no_schedules_yet")} }
+                                }
                             } else {
                                 let mut toggle_avail = {
                                     let mut avail_selected = avail_selected.clone();
                                     move |sid: i64| {
                                         let mut v = avail_selected.read().clone();
-                                        if let Some(pos) = v.iter().position(|x| *x == sid) { v.remove(pos); } else { v.push(sid); }
+                                        if let Some(pos) = v.iter().position(|x| *x == sid) {
+                                            v.remove(pos);
+                                        } else {
+                                            v.push(sid);
+                                        }
                                         avail_selected.set(v);
                                     }
                                 };
-                                rsx!(
+                                rsx! {
                                     ul { class: "divide-y divide-slate-200 dark:divide-slate-700 rounded-md border border-slate-200 dark:border-slate-700",
-                                        for (sid, label) in schs.into_iter() {
+                                        for (sid , label) in schs.into_iter() {
                                             li { class: "px-3 py-2 flex items-center gap-3",
-                                                input { r#type: "checkbox", checked: avail_selected.read().contains(&sid), onchange: move |_| toggle_avail(sid) }
+                                                input {
+                                                    r#type: "checkbox",
+                                                    checked: avail_selected.read().contains(&sid),
+                                                    onchange: move |_| toggle_avail(sid),
+                                                }
                                                 span { class: "text-sm", {label} }
                                             }
                                         }
                                     }
-                                )
+                                }
                             }
                         }
                     }
-                    // Relationships section
                     div { class: "space-y-2",
-                        h3 { class: "text-sm font-semibold text-slate-700 dark:text-slate-200", {t("publishers.relationships")} }
-                        // Add control
+                        h3 { class: "text-sm font-semibold text-slate-700 dark:text-slate-200",
+                            {t("publishers.relationships")}
+                        }
                         div { class: "flex items-center gap-2",
-                            select { class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full",
-                                value: rel_add_pid.read().clone(), onchange: move |e| rel_add_pid.set(e.value()),
+                            select {
+                                class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full",
+                                value: rel_add_pid.read().clone(),
+                                onchange: move |e| rel_add_pid.set(e.value()),
                                 option { value: "", {t("common.select_publisher")} }
                                 {
                                     let cur_id = form.read().id.unwrap_or(-1);
-                                    let existing_ids: std::collections::HashSet<i64> = rel_selected.read().iter().map(|(oid,_)| *oid).collect();
-                                    rsx!( for p in list.read().iter().filter(|pp| pp.id != cur_id && !existing_ids.contains(&pp.id)) {
-                                        option { value: {format!("{}", p.id)}, {format!("{} {}", p.first_name, p.last_name)} }
-                                    })
+                                    let existing_ids: std::collections::HashSet<i64> = rel_selected
+                                        .read()
+                                        .iter()
+                                        .map(|(oid, _)| *oid)
+                                        .collect();
+                                    rsx! {
+                                        for p in list.read().iter().filter(|pp| pp.id != cur_id && !existing_ids.contains(&pp.id)) {
+                                            option { value: {format!("{}", p.id)}, {format!("{} {}", p.first_name, p.last_name)} }
+                                        }
+                                    }
                                 }
                             }
-                            select { class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm",
-                                value: rel_add_kind.read().clone(), onchange: move |e| rel_add_kind.set(e.value()),
+                            select {
+                                class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm",
+                                value: rel_add_kind.read().clone(),
+                                onchange: move |e| rel_add_kind.set(e.value()),
                                 option { value: "recommended", {t("publishers.recommended")} }
                                 option { value: "mandatory", {t("publishers.mandatory")} }
                             }
-                            button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            button {
+                                class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
                                 onclick: move |_| {
                                     let pid_input = rel_add_pid.read().clone();
                                     if let Ok(pid) = pid_input.parse::<i64>() {
                                         let mut v = rel_selected.read().clone();
-                                        if let Some(existing) = v.iter_mut().find(|(oid,_)| *oid == pid) { existing.1 = rel_add_kind.read().clone(); }
-                                        else { v.push((pid, rel_add_kind.read().clone())); }
+                                        if let Some(existing) = v.iter_mut().find(|(oid, _)| *oid == pid) {
+                                            existing.1 = rel_add_kind.read().clone();
+                                        } else {
+                                            v.push((pid, rel_add_kind.read().clone()));
+                                        }
                                         rel_selected.set(v);
                                         rel_add_pid.set(String::new());
                                     }
@@ -502,109 +676,160 @@ pub fn Publishers() -> Element {
                                 {t("publishers.add")}
                             }
                         }
-                        // List existing relationships
                         {
                             let rels = rel_selected.read().clone();
                             if rels.is_empty() {
-                                rsx!( p { class: "text-sm text-slate-500", {t("publishers.no_relationships_yet")} } )
+                                rsx! {
+                                    p { class: "text-sm text-slate-500", {t("publishers.no_relationships_yet")} }
+                                }
                             } else {
-                                rsx!( ul { class: "divide-y divide-slate-200 dark:divide-slate-700 rounded-md border border-slate-200 dark:border-slate-700",
-                                    for (oid, kind) in rels.into_iter() {
-                                        li { class: "px-3 py-2 flex items-center gap-3 justify-between",
-                                            div { class: "text-sm", {
-                                                if let Some(pp) = list.read().iter().find(|pp| pp.id == oid) {
-                                                    format!("{} {}", pp.first_name, pp.last_name)
-                                                } else { format!("#{}", oid) }
-                                            } }
-                                            div { class: "flex items-center gap-2",
-                                                select { class: "h-8 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-xs",
-                                                    value: kind.clone(), onchange: move |e| {
-                                                        let mut v = rel_selected.read().clone();
-                                                        if let Some(it) = v.iter_mut().find(|(id,_)| *id == oid) { it.1 = e.value(); }
-                                                        rel_selected.set(v);
-                                                    },
-                                                    option { value: "recommended", {t("publishers.recommended")} }
-                                                    option { value: "mandatory", {t("publishers.mandatory")} }
+                                rsx! {
+                                    ul { class: "divide-y divide-slate-200 dark:divide-slate-700 rounded-md border border-slate-200 dark:border-slate-700",
+                                        for (oid , kind) in rels.into_iter() {
+                                            li { class: "px-3 py-2 flex items-center gap-3 justify-between",
+                                                div { class: "text-sm",
+                                                    {
+                                                        if let Some(pp) = list.read().iter().find(|pp| pp.id == oid) {
+                                                            format!("{} {}", pp.first_name, pp.last_name)
+                                                        } else {
+                                                            format!("#{}", oid)
+                                                        }
+                                                    }
                                                 }
-                                                button { class: "h-8 px-2 rounded-md border border-red-300 text-red-700 text-xs",
-                                                    onclick: move |_| {
-                                                        let mut v = rel_selected.read().clone();
-                                                        v.retain(|(id,_)| *id != oid);
-                                                        rel_selected.set(v);
-                                                    },
-                                                    {t("publishers.remove")}
+                                                div { class: "flex items-center gap-2",
+                                                    select {
+                                                        class: "h-8 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-xs",
+                                                        value: kind.clone(),
+                                                        onchange: move |e| {
+                                                            let mut v = rel_selected.read().clone();
+                                                            if let Some(it) = v.iter_mut().find(|(id, _)| *id == oid) {
+                                                                it.1 = e.value();
+                                                            }
+                                                            rel_selected.set(v);
+                                                        },
+                                                        option { value: "recommended", {t("publishers.recommended")} }
+                                                        option { value: "mandatory", {t("publishers.mandatory")} }
+                                                    }
+                                                    button {
+                                                        class: "h-8 px-2 rounded-md border border-red-300 text-red-700 text-xs",
+                                                        onclick: move |_| {
+                                                            let mut v = rel_selected.read().clone();
+                                                            v.retain(|(id, _)| *id != oid);
+                                                            rel_selected.set(v);
+                                                        },
+                                                        {t("publishers.remove")}
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                })
+                                }
                             }
                         }
                     }
                     div { class: "flex items-center justify-between gap-2",
-                        // In-edit delete button (when editing existing)
-                        { form.read().id.map(|eid| rsx!( button { class: "inline-flex items-center h-9 px-3 rounded-md border border-red-300 text-red-700 text-sm font-medium transition",
-                            onclick: move |_| { confirm_action.set(Some(ConfirmAction::DeleteOne(eid))); }, {t("common.delete")} } )) }
-                        div { class: "flex items-center gap-2",
-                        button { class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition", onclick: close_modal, {t("common.cancel")} }
-                        button { class: "inline-flex items-center h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition", onclick: on_submit, { if form.read().id.is_some() { t("common.save") } else { t("common.create") } } }
-                        }
-                    }
-                }
-            }
-        )) }
-
-        // Confirm modal
-        { confirm_action.read().as_ref().map(|action| {
-            let message = match action {
-                ConfirmAction::DeleteOne(_id) => t("publishers.confirm_delete_one"),
-                ConfirmAction::DeleteMany(ids) => format!("{} ({})", t("publishers.confirm_delete_many"), ids.len()),
-            };
-            rsx!(
-                div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
-                    div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
-                        h2 { class: "text-lg font-semibold", {t("common.confirm_delete_title")} }
-                        p { class: "text-sm text-slate-600 dark:text-slate-300", {message} }
-                        div { class: "flex items-center justify-end gap-2",
-                            button { class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
-                                onclick: move |_| confirm_action.set(None), {t("common.cancel")} }
-                            button { class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                        {form.read().id.map(|eid| rsx! {
+                            button {
+                                class: "inline-flex items-center h-9 px-3 rounded-md border border-red-300 text-red-700 text-sm font-medium transition",
                                 onclick: move |_| {
-                                    let act = confirm_action.read().clone();
-                                    match act {
-                                        Some(ConfirmAction::DeleteOne(id)) => {
-                                            delete_publisher(id);
-                                            // also unselect if present
-                                            let mut v = selected.read().clone(); v.retain(|x| *x != id); selected.set(v);
-                                            // ensure edit modal is closed if open
-                                            modal_open.set(false);
-                                        }
-                    Some(ConfirmAction::DeleteMany(_ids)) => {
-                                            #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
-                                            {
-                        for id in _ids.iter().copied() { let _ = dao::delete_publisher(id); }
-                                                if let Ok(items) = dao::list_publishers() { let mut list_sig = list.clone(); list_sig.set(items); }
-                                            }
-                                            #[cfg(target_arch = "wasm32")]
-                                            {
-                        for id in _ids.iter().copied() { wasm_backend::delete_publisher(id); }
-                                                let mut list_sig = list.clone();
-                                                list_sig.set(wasm_backend::list_publishers());
-                                            }
-                                            selected.set(vec![]);
-                                            // close edit modal if open
-                                            modal_open.set(false);
-                                        }
-                                        None => {}
-                                    }
-                                    confirm_action.set(None);
+                                    confirm_action.set(Some(ConfirmAction::DeleteOne(eid)));
                                 },
-                                span { "🗑️" } span { class: "hidden sm:inline", {t("common.delete")} }
+                                {t("common.delete")}
+                            }
+                        })}
+                        div { class: "flex items-center gap-2",
+                            button {
+                                class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                                onclick: close_modal,
+                                {t("common.cancel")}
+                            }
+                            button {
+                                class: "inline-flex items-center h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition",
+                                onclick: on_submit,
+                                {if form.read().id.is_some() { t("common.save") } else { t("common.create") }}
                             }
                         }
                     }
                 }
-            )
-        }) }
+            }
+        })}
+
+        // Confirm modal
+        {
+            confirm_action
+                .read()
+                // also unselect if present
+                // ensure edit modal is closed if open
+                // close edit modal if open
+                .as_ref()
+                .map(|action| {
+                    let message = match action {
+                        ConfirmAction::DeleteOne(_id) => t("publishers.confirm_delete_one"),
+                        ConfirmAction::DeleteMany(ids) => {
+                            format!(
+                                "{} ({})",
+                                t("publishers.confirm_delete_many"),
+                                ids.len(),
+                            )
+                        }
+                    };
+                    rsx! {
+                        div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
+                            div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
+                                h2 { class: "text-lg font-semibold", {t("common.confirm_delete_title")} }
+                                p { class: "text-sm text-slate-600 dark:text-slate-300", {message} }
+                                div { class: "flex items-center justify-end gap-2",
+                                    button {
+                                        class: "inline-flex items-center h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                                        onclick: move |_| confirm_action.set(None),
+                                        {t("common.cancel")}
+                                    }
+                                    button {
+                                        class: "inline-flex items-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition",
+                                        onclick: move |_| {
+                                            let act = confirm_action.read().clone();
+                                            match act {
+                                                Some(ConfirmAction::DeleteOne(id)) => {
+                                                    delete_publisher(id);
+                                                    let mut v = selected.read().clone();
+                                                    v.retain(|x| *x != id);
+                                                    selected.set(v);
+                                                    modal_open.set(false);
+                                                }
+                                                Some(ConfirmAction::DeleteMany(_ids)) => {
+                                                    #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+                                                    {
+                                                        for id in _ids.iter().copied() {
+                                                            let _ = dao::delete_publisher(id);
+                                                        }
+                                                        if let Ok(items) = dao::list_publishers() {
+                                                            let mut list_sig = list.clone();
+                                                            list_sig.set(items);
+                                                        }
+                                                    }
+                                                    #[cfg(target_arch = "wasm32")]
+                                                    {
+                                                        for id in _ids.iter().copied() {
+                                                            wasm_backend::delete_publisher(id);
+                                                        }
+                                                        let mut list_sig = list.clone();
+                                                        list_sig.set(wasm_backend::list_publishers());
+                                                    }
+                                                    selected.set(vec![]);
+                                                    modal_open.set(false);
+                                                }
+                                                None => {}
+                                            }
+                                            confirm_action.set(None);
+                                        },
+                                        span { "🗑️" }
+                                        span { class: "hidden sm:inline", {t("common.delete")} }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+        }
     }
 }

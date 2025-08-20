@@ -14,7 +14,9 @@ pub fn Home() -> Element {
     let configured: Signal<bool> = use_context();
 
     if !configured() {
-        return rsx! { super::landpage::Landpage {} };
+        return rsx! {
+            super::landpage::Landpage {}
+        };
     }
 
     // Stats: compute on mount
@@ -111,25 +113,45 @@ pub fn Home() -> Element {
             h1 { class: "text-2xl sm:text-3xl font-semibold", {t("home.welcome")} }
             p { class: "text-slate-600 dark:text-slate-300", {t("home.choose")} }
             div { class: "grid gap-3 grid-cols-2 md:grid-cols-3",
-                a { href: "/publishers", class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
+                a {
+                    href: "/publishers",
+                    class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
                     span { class: "text-2xl sm:text-3xl", "👥" }
-                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600", {t("menu.publishers")} }
+                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600",
+                        {t("menu.publishers")}
+                    }
                 }
-                a { href: "/schedules", class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
+                a {
+                    href: "/schedules",
+                    class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
                     span { class: "text-2xl sm:text-3xl", "📅" }
-                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600", {t("menu.schedules")} }
+                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600",
+                        {t("menu.schedules")}
+                    }
                 }
-                a { href: "/shifts", class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
+                a {
+                    href: "/shifts",
+                    class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
                     span { class: "text-2xl sm:text-3xl", "🗓️" }
-                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600", {t("menu.shifts")} }
+                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600",
+                        {t("menu.shifts")}
+                    }
                 }
-                a { href: "/absences", class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
+                a {
+                    href: "/absences",
+                    class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
                     span { class: "text-2xl sm:text-3xl", "🚫" }
-                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600", {t("menu.absences")} }
+                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600",
+                        {t("menu.absences")}
+                    }
                 }
-                a { href: "/configuration", class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
+                a {
+                    href: "/configuration",
+                    class: "group h-24 sm:h-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col items-center justify-center gap-1.5 hover:border-blue-400 hover:shadow transition",
                     span { class: "text-2xl sm:text-3xl", "⚙️" }
-                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600", {t("menu.configuration")} }
+                    span { class: "text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600",
+                        {t("menu.configuration")}
+                    }
                 }
             }
             hr {}
@@ -149,7 +171,7 @@ pub fn Home() -> Element {
                         "{:04}-{:02}-{:02}",
                         now.get_full_year() as i32,
                         now.get_month() as u32 + 1,
-                        now.get_date() as u32
+                        now.get_date() as u32,
                     )
                 };
                 #[cfg(all(not(target_arch = "wasm32"), not(feature = "native-db")))]
@@ -159,26 +181,49 @@ pub fn Home() -> Element {
                 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
                 let today_list: Vec<(String, String, Vec<String>)> = {
                     use chrono::{NaiveDate, NaiveDateTime, NaiveTime, Timelike};
-                    let name_order = backend::get_configuration().ok().map(|c| c.name_order).unwrap_or_else(|| "first_last".into());
+                    let name_order = backend::get_configuration()
+
+                        .ok()
+                        .map(|c| c.name_order)
+                        .unwrap_or_else(|| "first_last".into());
                     let pubs = backend::list_publishers().unwrap_or_default();
-                    let name_map = pubs.into_iter()
+                    let name_map = pubs
+                        .into_iter()
                         .map(|p| {
-                            let name = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
+                            let name = if name_order == "last_first" {
+                                format!("{} {}", p.last_name, p.first_name)
+                            } else {
+                                format!("{} {}", p.first_name, p.last_name)
+                            };
                             (p.id, name)
                         })
                         .collect::<std::collections::HashMap<_, _>>();
                     let d = NaiveDate::parse_from_str(&today_ymd, "%Y-%m-%d").unwrap();
                     let start = NaiveDateTime::new(d, NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-                    let end = NaiveDateTime::new(d, NaiveTime::from_hms_opt(23, 59, 59).unwrap());
+                    let end = NaiveDateTime::new(
+                        d,
+                        NaiveTime::from_hms_opt(23, 59, 59).unwrap(),
+                    );
                     let mut v = backend::list_shifts_between(start, end).unwrap_or_default();
                     v.sort_by_key(|s| s.start);
                     v.into_iter()
                         .map(|s| {
-                            let time = format!("{:02}:{:02}–{:02}:{:02}", s.start.hour(), s.start.minute(), s.end.hour(), s.end.minute());
+                            let time = format!(
+                                "{:02}:{:02}–{:02}:{:02}",
+                                s.start.hour(),
+                                s.start.minute(),
+                                s.end.hour(),
+                                s.end.minute(),
+                            );
                             let mut names = s
                                 .publishers
                                 .into_iter()
-                                .map(|id| name_map.get(&id).cloned().unwrap_or_else(|| format!("#{id}")))
+                                .map(|id| {
+                                    name_map
+                                        .get(&id)
+                                        .cloned()
+                                        .unwrap_or_else(|| format!("#{id}"))
+                                })
                                 .collect::<Vec<_>>();
                             names.sort();
                             (time, s.location, names)
@@ -189,13 +234,20 @@ pub fn Home() -> Element {
                 let today_list: Vec<(String, String, Vec<String>)> = {
                     let name_order = backend::get_name_order();
                     let pubs = backend::list_publishers();
-                    let mut v = backend::list_shifts_between(&format!("{} 00:00:00", today_ymd), &format!("{} 23:59:59", today_ymd));
-                    v.sort_by(|a,b| a.start_datetime.cmp(&b.start_datetime));
+                    let mut v = backend::list_shifts_between(
+                        &format!("{} 00:00:00", today_ymd),
+                        &format!("{} 23:59:59", today_ymd),
+                    );
+                    v.sort_by(|a, b| a.start_datetime.cmp(&b.start_datetime));
                     v.into_iter()
                         .map(|s| {
                             let start_part = s.start_datetime.split(' ').nth(1).unwrap_or("");
                             let end_part = s.end_datetime.split(' ').nth(1).unwrap_or("");
-                            let sh = if start_part.len() >= 5 { &start_part[..5] } else { start_part };
+                            let sh = if start_part.len() >= 5 {
+                                &start_part[..5]
+                            } else {
+                                start_part
+                            };
                             let eh = if end_part.len() >= 5 { &end_part[..5] } else { end_part };
                             let time = format!("{}–{}", sh, eh);
                             let mut names = s
@@ -204,7 +256,13 @@ pub fn Home() -> Element {
                                 .map(|id| {
                                     pubs.iter()
                                         .find(|p| p.id == id)
-                                        .map(|p| if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) })
+                                        .map(|p| {
+                                            if name_order == "last_first" {
+                                                format!("{} {}", p.last_name, p.first_name)
+                                            } else {
+                                                format!("{} {}", p.first_name, p.last_name)
+                                            }
+                                        })
                                         .unwrap_or_else(|| format!("#{id}"))
                                 })
                                 .collect::<Vec<_>>();
@@ -215,35 +273,42 @@ pub fn Home() -> Element {
                 };
                 #[cfg(all(not(target_arch = "wasm32"), not(feature = "native-db")))]
                 let today_list: Vec<(String, String, Vec<String>)> = Vec::new();
-
                 let date_disp = crate::i18n::format_date_ymd(&today_ymd);
-                rsx!(
+                rsx! {
                     div { class: "rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3",
-                        h2 { class: "text-sm font-semibold mb-2", { format!("{} — {}", t("home.today_shifts"), date_disp) } }
-                        { if today_list.is_empty() {
-                            rsx!( ul { class: "text-sm leading-6 list-disc list-inside text-slate-800 dark:text-slate-200",
-                                li { class: "list-none text-slate-500", { t("home.no_shifts_today") } }
-                            })
-                        } else {
-                            rsx!( ul { class: "text-sm leading-6 list-disc list-inside text-slate-800 dark:text-slate-200",
-                                for (time, loc, names) in today_list.iter() {
-                                    li { { format!("{} • {} — {}", time, loc, names.join(", ")) } }
+                        h2 { class: "text-sm font-semibold mb-2",
+                            {format!("{} — {}", t("home.today_shifts"), date_disp)}
+                        }
+                        {
+                            if today_list.is_empty() {
+                                rsx! {
+                                    ul { class: "text-sm leading-6 list-disc list-inside text-slate-800 dark:text-slate-200",
+                                        li { class: "list-none text-slate-500", {t("home.no_shifts_today")} }
+                                    }
                                 }
-                            })
-                        } }
+                            } else {
+                                rsx! {
+                                    ul { class: "text-sm leading-6 list-disc list-inside text-slate-800 dark:text-slate-200",
+                                        for (time , loc , names) in today_list.iter() {
+                                            li { {format!("{} • {} — {}", time, loc, names.join(", "))} }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                )
+                }
             }
             hr {}
             // Quick stats (below the menu)
             div { class: "grid gap-3 grid-cols-2 md:grid-cols-2",
                 div { class: "h-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3 flex flex-col justify-center",
                     span { class: "text-xs text-slate-500", {t("stats.total_publishers")} }
-                    span { class: "text-xl font-semibold", { total_publishers().to_string() } }
+                    span { class: "text-xl font-semibold", {total_publishers().to_string()} }
                 }
                 div { class: "h-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3 flex flex-col justify-center",
                     span { class: "text-xs text-slate-500", {t("stats.total_managers")} }
-                    span { class: "text-xl font-semibold", { total_managers().to_string() } }
+                    span { class: "text-xl font-semibold", {total_managers().to_string()} }
                 }
             }
             // Weakest schedules lists (full width)
@@ -251,15 +316,29 @@ pub fn Home() -> Element {
                 div { class: "rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3",
                     h2 { class: "text-xs text-slate-500 pb-2", {t("stats.weakest_publishers")} }
                     ul { class: "text-sm space-y-1",
-                        for (label, c) in weakest_schedules_publishers.read().iter() { li { class: "flex items-center justify-between", span { {label.to_string()} } span { class: "text-slate-500", {c.to_string()} } } }
-                        { weakest_schedules_publishers.read().is_empty().then(|| rsx!( li { class: "text-slate-500 text-sm", {t("stats.no_data")} } )) }
+                        for (label , c) in weakest_schedules_publishers.read().iter() {
+                            li { class: "flex items-center justify-between",
+                                span { {label.to_string()} }
+                                span { class: "text-slate-500", {c.to_string()} }
+                            }
+                        }
+                        {weakest_schedules_publishers.read().is_empty().then(|| rsx! {
+                            li { class: "text-slate-500 text-sm", {t("stats.no_data")} }
+                        })}
                     }
                 }
                 div { class: "rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3",
                     h2 { class: "text-xs text-slate-500 pb-2", {t("stats.weakest_managers")} }
                     ul { class: "text-sm space-y-1",
-                        for (label, c) in weakest_schedules_managers.read().iter() { li { class: "flex items-center justify-between", span { {label.to_string()} } span { class: "text-slate-500", {c.to_string()} } } }
-                        { weakest_schedules_managers.read().is_empty().then(|| rsx!( li { class: "text-slate-500 text-sm", {t("stats.no_data")} } )) }
+                        for (label , c) in weakest_schedules_managers.read().iter() {
+                            li { class: "flex items-center justify-between",
+                                span { {label.to_string()} }
+                                span { class: "text-slate-500", {c.to_string()} }
+                            }
+                        }
+                        {weakest_schedules_managers.read().is_empty().then(|| rsx! {
+                            li { class: "text-slate-500 text-sm", {t("stats.no_data")} }
+                        })}
                     }
                 }
             }
@@ -267,15 +346,29 @@ pub fn Home() -> Element {
                 div { class: "rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3",
                     h2 { class: "text-xs text-slate-500 pb-2", {t("stats.top5")} }
                     ul { class: "text-sm space-y-1",
-                        for (name, c) in top5_assigned.read().iter() { li { class: "flex items-center justify-between", span { {name.clone()} } span { class: "text-slate-500", {c.to_string()} } } }
-                        { top5_assigned.read().is_empty().then(|| rsx!( li { class: "text-slate-500 text-sm", {t("stats.no_data_yet")} } )) }
+                        for (name , c) in top5_assigned.read().iter() {
+                            li { class: "flex items-center justify-between",
+                                span { {name.clone()} }
+                                span { class: "text-slate-500", {c.to_string()} }
+                            }
+                        }
+                        {top5_assigned.read().is_empty().then(|| rsx! {
+                            li { class: "text-slate-500 text-sm", {t("stats.no_data_yet")} }
+                        })}
                     }
                 }
                 div { class: "rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-3",
                     h2 { class: "text-xs text-slate-500 pb-2", {t("stats.least5")} }
                     ul { class: "text-sm space-y-1",
-                        for (name, c) in bottom5_assigned.read().iter() { li { class: "flex items-center justify-between", span { {name.clone()} } span { class: "text-slate-500", {c.to_string()} } } }
-                        { bottom5_assigned.read().is_empty().then(|| rsx!( li { class: "text-slate-500 text-sm", {t("stats.no_data_yet")} } )) }
+                        for (name , c) in bottom5_assigned.read().iter() {
+                            li { class: "flex items-center justify-between",
+                                span { {name.clone()} }
+                                span { class: "text-slate-500", {c.to_string()} }
+                            }
+                        }
+                        {bottom5_assigned.read().is_empty().then(|| rsx! {
+                            li { class: "text-slate-500 text-sm", {t("stats.no_data_yet")} }
+                        })}
                     }
                 }
             }

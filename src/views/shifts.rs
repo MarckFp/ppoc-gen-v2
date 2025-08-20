@@ -1094,371 +1094,880 @@ pub fn Shifts() -> Element {
         div { class: "min-h-[70vh] flex items-start justify-center",
             div { class: "w-full max-w-5xl mx-auto space-y-5",
                 div { class: "flex items-center justify-between gap-2",
-                    a { href: "/", class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
-                        span { "←" } span { class: "hidden sm:inline", {t("nav.home")} }
+                    a {
+                        href: "/",
+                        class: "inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition",
+                        span { "←" }
+                        span { class: "hidden sm:inline", {t("nav.home")} }
                     }
                     div { class: "flex items-center gap-2",
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: prev_month, {t("common.prev")} }
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: this_month, {t("common.today")} }
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: next_month, {t("common.next")} }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: prev_month,
+                            {t("common.prev")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: this_month,
+                            {t("common.today")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: next_month,
+                            {t("common.next")}
+                        }
                     }
                 }
                 div { class: "rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-4 sm:p-5 space-y-4",
                     div { class: "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2",
-                        h1 { class: "text-xl sm:text-2xl font-semibold", {t("nav.shifts")}, " — ", {month_label.clone()} }
+                        h1 { class: "text-xl sm:text-2xl font-semibold",
+                            {t("nav.shifts")}
+                            " — "
+                            {month_label.clone()}
+                        }
                         div { class: "flex items-center gap-2 w-full sm:w-auto",
                             // Selection controls appear to the left when in agenda view
-                            { (view() == "agenda").then(|| rsx!(
+                            {(view() == "agenda").then(|| rsx! {
                                 div { class: "flex items-center gap-2",
-                                    button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: { let mut select_mode = select_mode.clone(); move |_| select_mode.set(!select_mode()) }, { if select_mode() { t("common.done") } else { t("common.select") } } }
-                                    { select_mode().then(|| rsx!(
+                                    button {
+                                        class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                                        onclick: {
+                                            let mut select_mode = select_mode.clone();
+                                            move |_| select_mode.set(!select_mode())
+                                        },
+                                        {if select_mode() { t("common.done") } else { t("common.select") }}
+                                    }
+                                    {select_mode().then(|| rsx! {
                                         div { class: "flex items-center gap-1",
-                                            input { r#type: "checkbox",
-                                                checked: { selected_ids.read().len() == filtered_items.len() && !filtered_items.is_empty() },
+                                            input {
+                                                r#type: "checkbox",
+                                                checked: {selected_ids.read().len() == filtered_items.len() && !filtered_items.is_empty()},
                                                 disabled: filtered_items.is_empty(),
                                                 onchange: {
                                                     let mut selected_ids = selected_ids.clone();
                                                     let ids: Vec<i64> = filtered_items.iter().map(|it| it.id).collect();
                                                     move |_| {
                                                         let mut set = selected_ids.write();
-                                                        if set.len() == ids.len() && !ids.is_empty() { set.clear(); }
-                                                        else { set.clear(); for id in &ids { set.insert(*id); } }
+                                                        if set.len() == ids.len() && !ids.is_empty() {
+                                                            set.clear();
+                                                        } else {
+                                                            set.clear();
+                                                            for id in &ids {
+                                                                set.insert(*id);
+                                                            }
+                                                        }
                                                     }
-                                                }
+                                                },
                                             }
                                             span { class: "text-sm text-slate-600 dark:text-slate-300", {t("common.all")} }
                                         }
-                                    )) }
-                                    { (!selected_ids.read().is_empty()).then(|| rsx!( button { class: "h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white", onclick: bulk_delete, { format!("{} ({})", t("common.delete_selected"), selected_ids.read().len()) } } )) }
+                                    })}
+                                    {(!selected_ids.read().is_empty()).then(|| rsx! {
+                                        button {
+                                            class: "h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white",
+                                            onclick: bulk_delete,
+                                            {format!("{} ({})", t("common.delete_selected"), selected_ids.read().len())}
+                                        }
+                                    })}
                                 }
-                            )) }
+                            })}
                             {
                                 if is_small_screen() {
-                                    rsx!( span { class: "text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 ml-auto", {t("shifts.agenda")} } )
+                                    rsx! {
+                                        span { class: "text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 ml-auto",
+                                            {t("shifts.agenda")}
+                                        }
+                                    }
                                 } else {
-                                    rsx!( select { class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm ml-auto", value: view(), onchange: {
-                                            let mut view = view.clone();
-                                            let mut select_mode = select_mode.clone();
-                                            let mut selected_ids = selected_ids.clone();
-                                            move |e| {
-                                                let v = e.value();
-                                                view.set(v.clone());
-                                                if v == "month" { select_mode.set(false); selected_ids.write().clear(); }
-                                            }
-                                        },
-                                        option { value: "month", {t("shifts.month")} }
-                                        option { value: "agenda", {t("shifts.agenda")} }
-                                    } )
+                                    rsx! {
+                                        select {
+                                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm ml-auto",
+                                            value: view(),
+                                            onchange: {
+                                                let mut view = view.clone();
+                                                let mut select_mode = select_mode.clone();
+                                                let mut selected_ids = selected_ids.clone();
+                                                move |e| {
+                                                    let v = e.value();
+                                                    view.set(v.clone());
+                                                    if v == "month" {
+                                                        select_mode.set(false);
+                                                        selected_ids.write().clear();
+                                                    }
+                                                }
+                                            },
+                                            option { value: "month", {t("shifts.month")} }
+                                            option { value: "agenda", {t("shifts.agenda")} }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                     div { class: "flex flex-col sm:flex-row items-center justify-between gap-2",
                         div { class: "flex items-center gap-2",
-                            button { class: "h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium", onclick: move |_| manual_open.set(true), {t("shifts.new")} }
-                            button { class: format!("h-9 px-3 rounded-md {} text-white text-sm font-medium inline-flex items-center gap-2", if generating() { "bg-slate-400 cursor-not-allowed" } else { "bg-emerald-600 hover:bg-emerald-500" }), disabled: generating(), onclick: move |_| auto_open.set(true),
-                                span { { if generating() { "⏳" } else { "⚙️" } } } span { {t("shifts.auto_generate")} }
+                            button {
+                                class: "h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium",
+                                onclick: move |_| manual_open.set(true),
+                                {t("shifts.new")}
                             }
-                            button { class: "h-9 px-3 rounded-md bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium", onclick: move |_| export_open.set(true), {t("shifts.export")} }
+                            button {
+                                class: format!(
+                                    "h-9 px-3 rounded-md {} text-white text-sm font-medium inline-flex items-center gap-2",
+                                    if generating() {
+                                        "bg-slate-400 cursor-not-allowed"
+                                    } else {
+                                        "bg-emerald-600 hover:bg-emerald-500"
+                                    },
+                                ),
+                                disabled: generating(),
+                                onclick: move |_| auto_open.set(true),
+                                span { {if generating() { "⏳" } else { "⚙️" }} }
+                                span { {t("shifts.auto_generate")} }
+                            }
+                            button {
+                                class: "h-9 px-3 rounded-md bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium",
+                                onclick: move |_| export_open.set(true),
+                                {t("shifts.export")}
+                            }
                         }
-                        div { class: "text-sm text-slate-600 dark:text-slate-300", {format!("{}–{}", fmt_date_ymd(&month_start), fmt_date_ymd(&month_end))} }
+                        div { class: "text-sm text-slate-600 dark:text-slate-300",
+                            {format!("{}–{}", fmt_date_ymd(&month_start), fmt_date_ymd(&month_end))}
+                        }
                     }
-                    
                     {
-                    if view() == "agenda" { rsx!(
-                        ul { class: "divide-y divide-slate-200 dark:divide-slate-700",
-                            for item in filtered_items.clone() {
-                                li { class: "py-3 flex items-start justify-between gap-3",
-                                    div { class: "min-w-0 w-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2", onclick: { let mut edit_form = edit_form.clone(); let mut edit_open = edit_open.clone(); let it = item.clone(); move |_| { let mut w = edit_form.write(); w.shift_id = it.id; w.selected_pids = it.publishers.clone(); w.add_pid.clear(); w.loc = it.location.clone(); w.start_dt = format!("{}T{}", it.date.clone(), it.start_hour.clone()); w.end_dt = format!("{}T{}", it.date.clone(), it.end_hour.clone()); edit_open.set(true); } },
-                                        div { class: "text-sm text-slate-500 flex items-center gap-2",
-                                            {
-                                                // Show date and weekday for clarity
-                                                let parts: Vec<&str> = item.date.split('-').collect();
-                                                if parts.len()==3 {
-                                                    let y = parts[0].parse::<i32>().unwrap_or(1970);
-                                                    let m = parts[1].parse::<u32>().unwrap_or(1);
-                                                    let d = parts[2].parse::<u32>().unwrap_or(1);
-                                                    let wd = weekday_name_for_date(y,m,d);
-                                                    format!("{} ({})", item.date.clone(), wd)
-                                                } else { item.date.clone() }
+                        if view() == "agenda" {
+                            // Show date and weekday for clarity
+                            // render assigned publisher names instead of count
+                            // color dot per location (better contrast than tinted background)
+                            rsx! {
+                                ul { class: "divide-y divide-slate-200 dark:divide-slate-700",
+                                    for item in filtered_items.clone() {
+                                        li { class: "py-3 flex items-start justify-between gap-3",
+                                            div {
+                                                class: "min-w-0 w-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md px-3 -mx-3 py-2",
+                                                onclick: {
+                                                    let mut edit_form = edit_form.clone();
+                                                    let mut edit_open = edit_open.clone();
+                                                    let it = item.clone();
+                                                    move |_| {
+                                                        let mut w = edit_form.write();
+                                                        w.shift_id = it.id;
+                                                        w.selected_pids = it.publishers.clone();
+                                                        w.add_pid.clear();
+                                                        w.loc = it.location.clone();
+                                                        w.start_dt = format!("{}T{}", it.date.clone(), it.start_hour.clone());
+                                                        w.end_dt = format!("{}T{}", it.date.clone(), it.end_hour.clone());
+                                                        edit_open.set(true);
+                                                    }
+                                                },
+                                                div { class: "text-sm text-slate-500 flex items-center gap-2",
+                                                    {
+                                                        let parts: Vec<&str> = item.date.split('-').collect();
+                                                        if parts.len() == 3 {
+                                                            let y = parts[0].parse::<i32>().unwrap_or(1970);
+                                                            let m = parts[1].parse::<u32>().unwrap_or(1);
+                                                            let d = parts[2].parse::<u32>().unwrap_or(1);
+                                                            let wd = weekday_name_for_date(y, m, d);
+                                                            format!("{} ({})", item.date.clone(), wd)
+                                                        } else {
+                                                            item.date.clone()
+                                                        }
+                                                    }
+                                                    {select_mode().then(|| rsx! {
+                                                        input {
+                                                            r#type: "checkbox",
+                                                            checked: selected_ids.read().contains(&item.id),
+                                                            onclick: move |e| e.stop_propagation(),
+                                                            onchange: {
+                                                                let mut selected_ids = selected_ids.clone();
+                                                                let id = item.id;
+                                                                move |_| {
+                                                                    let mut set = selected_ids.write();
+                                                                    if set.contains(&id) {
+                                                                        set.remove(&id);
+                                                                    } else {
+                                                                        set.insert(id);
+                                                                    }
+                                                                }
+                                                            },
+                                                        }
+                                                    })}
+                                                }
+                                                div { class: "font-medium",
+                                                    span { {item.title.clone()} }
+                                                }
+                                                {
+                                                    let mut names: Vec<String> = item
+                                                        .publishers
+                                                        .iter()
+                                                        .filter_map(|pid| {
+                                                            publishers_all
+                                                                .read()
+                                                                .iter()
+                                                                .find(|p| p.id == *pid)
+                                                                .map(|p| p.label.clone())
+                                                        })
+                                                        .collect();
+                                                    names.sort();
+                                                    rsx! {
+                                                        div { class: "text-xs text-slate-600 dark:text-slate-300",
+                                                            {
+                                                                if names.is_empty() {
+                                                                    t("shifts.no_publishers_assigned")
+                                                                } else {
+                                                                    names.join(", ")
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
-                                            { select_mode().then(|| rsx!( input { r#type: "checkbox", checked: selected_ids.read().contains(&item.id), onclick: move |e| e.stop_propagation(), onchange: { let mut selected_ids = selected_ids.clone(); let id = item.id; move |_| { let mut set = selected_ids.write(); if set.contains(&id) { set.remove(&id); } else { set.insert(id); } } } } )) }
                                         }
-                                        div { class: "font-medium",
-                                            span { {item.title.clone()} }
-                                        }
-                                        {
-                                            // render assigned publisher names instead of count
-                                            let mut names: Vec<String> = item.publishers.iter().filter_map(|pid| publishers_all.read().iter().find(|p| p.id == *pid).map(|p| p.label.clone())).collect();
-                                            names.sort();
-                                            rsx!( div { class: "text-xs text-slate-600 dark:text-slate-300", { if names.is_empty() { t("shifts.no_publishers_assigned") } else { names.join(", ") } } } )
+                                    }
+                                    {(filtered_items.is_empty()).then(|| rsx! {
+                                        li { class: "py-3 text-sm text-slate-500", {t("shifts.none_in_range")} }
+                                    })}
+                                }
+                            }
+                        } else {
+                            rsx! {
+                                div { class: "grid grid-cols-7 gap-2",
+                                    for wd in weekdays_for_locale() {
+                                        div { class: "text-xs font-semibold text-slate-500 text-center", {wd} }
+                                    }
+                                    for _i in 0..blanks_count {
+                                        div { class: "min-h-24 rounded-md bg-transparent" }
+                                    }
+                                    for day in 1..=month_end.2 {
+                                        div { class: "rounded-md border border-slate-200 dark:border-slate-700 p-2 space-y-1",
+                                            div { class: "text-xs text-slate-500 mb-1", {format!("{}", day)} }
+                                            for it in filtered_items
+                                                .iter()
+                                                .filter(|it| {
+                                                    it.date == format!("{:04}-{:02}-{:02}", month_start.0, month_start.1, day)
+                                                })
+                                            {
+                                                {
+                                                    let hue = {
+                                                        let mut h: u32 = 0;
+                                                        for b in it.location.as_bytes() {
+                                                            h = h.wrapping_mul(16777619) ^ (*b as u32);
+                                                        }
+                                                        h % 360
+                                                    };
+                                                    let dot_style = format!(
+                                                        "background-color: hsl({hue}, 70%, 45%); width:8px; height:8px; border-radius:9999px; display:inline-block;",
+                                                    );
+                                                    let mut names: Vec<String> = it
+                                                        .publishers
+                                                        .iter()
+                                                        .filter_map(|pid| {
+                                                            publishers_all
+                                                                .read()
+                                                                .iter()
+                                                                .find(|p| p.id == *pid)
+                                                                .map(|p| p.label.clone())
+                                                        })
+                                                        .collect();
+                                                    names.sort();
+                                                    rsx! {
+                                                        div {
+                                                            class: "text-[12px] flex flex-col gap-1 cursor-pointer border rounded p-2",
+                                                            onclick: {
+                                                                let mut edit_form = edit_form.clone();
+                                                                let mut edit_open = edit_open.clone();
+                                                                let it2 = it.clone();
+                                                                move |_| {
+                                                                    let mut w = edit_form.write();
+                                                                    w.shift_id = it2.id;
+                                                                    w.selected_pids = it2.publishers.clone();
+                                                                    w.add_pid.clear();
+                                                                    w.loc = it2.location.clone();
+                                                                    w.start_dt = format!("{}T{}", it2.date.clone(), it2.start_hour.clone());
+                                                                    w.end_dt = format!("{}T{}", it2.date.clone(), it2.end_hour.clone());
+                                                                    edit_open.set(true);
+                                                                }
+                                                            },
+                                                            div { class: "flex items-center gap-2 flex-wrap",
+                                                                span { style: dot_style }
+                                                                span { class: "font-semibold text-slate-900 dark:text-slate-100", {it.location.clone()} }
+                                                                span { class: "text-xs text-slate-600 dark:text-slate-300",
+                                                                    {format!("{}–{}", it.start_hour.clone(), it.end_hour.clone())}
+                                                                }
+                                                            }
+                                                            div { class: "text-[12px] text-slate-800 dark:text-slate-200 whitespace-normal break-words",
+                                                                {
+                                                                    if names.is_empty() {
+                                                                        t("shifts.no_publishers_assigned")
+                                                                    } else {
+                                                                        names.join(", ")
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                            { (filtered_items.is_empty()).then(|| rsx!( li { class: "py-3 text-sm text-slate-500", {t("shifts.none_in_range")} } )) }
                         }
-                    ) } else { rsx!(
-                        div { class: "grid grid-cols-7 gap-2",
-                            for wd in weekdays_for_locale() { div { class: "text-xs font-semibold text-slate-500 text-center", {wd} } }
-                            for _i in 0..blanks_count { div { class: "min-h-24 rounded-md bg-transparent" } }
-                            for day in 1..=month_end.2 {
-                                div { class: "rounded-md border border-slate-200 dark:border-slate-700 p-2 space-y-1",
-                                    div { class: "text-xs text-slate-500 mb-1", {format!("{}", day)} }
-                                    for it in filtered_items.iter().filter(|it| it.date == format!("{:04}-{:02}-{:02}", month_start.0, month_start.1, day)) {
-                                        {
-                                            // color dot per location (better contrast than tinted background)
-                                            let hue = { let mut h: u32 = 0; for b in it.location.as_bytes() { h = h.wrapping_mul(16777619) ^ (*b as u32); } h % 360 };
-                                            let dot_style = format!("background-color: hsl({hue}, 70%, 45%); width:8px; height:8px; border-radius:9999px; display:inline-block;");
-                                            let mut names: Vec<String> = it.publishers.iter().filter_map(|pid| publishers_all.read().iter().find(|p| p.id == *pid).map(|p| p.label.clone())).collect();
-                                            names.sort();
-                                            rsx!( div { class: "text-[12px] flex flex-col gap-1 cursor-pointer border rounded p-2",
-                                                onclick: { let mut edit_form = edit_form.clone(); let mut edit_open = edit_open.clone(); let it2 = it.clone(); move |_| { let mut w = edit_form.write(); w.shift_id = it2.id; w.selected_pids = it2.publishers.clone(); w.add_pid.clear(); w.loc = it2.location.clone(); w.start_dt = format!("{}T{}", it2.date.clone(), it2.start_hour.clone()); w.end_dt = format!("{}T{}", it2.date.clone(), it2.end_hour.clone()); edit_open.set(true); } },
-                                                div { class: "flex items-center gap-2 flex-wrap",
-                                                    span { style: dot_style }
-                                                    span { class: "font-semibold text-slate-900 dark:text-slate-100", {it.location.clone()} }
-                                                    span { class: "text-xs text-slate-600 dark:text-slate-300", {format!("{}–{}", it.start_hour.clone(), it.end_hour.clone())} }
-                                                }
-                                                div { class: "text-[12px] text-slate-800 dark:text-slate-200 whitespace-normal break-words",
-                                                    { if names.is_empty() { t("shifts.no_publishers_assigned") } else { names.join(", ") } }
-                                                }
-                                            })
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    ) }
                     }
                 }
             }
         }
 
         // Manual create modal
-        { manual_open().then(|| rsx!(
+        // location with suggestions
+        // start/end datetime
+        // add publishers
+        // current selected publishers
+        // warnings (simple absence/same-day checks)
+        {manual_open().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("shifts.new_title")} }
                     div { class: "grid grid-cols-1 gap-3",
-                        // location with suggestions
                         div { class: "space-y-1",
                             label { class: "text-xs text-slate-600 dark:text-slate-300", {t("schedules.location")} }
-                            input { r#type: "text", list: "locs", placeholder: t("schedules.location_placeholder"), class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: manual_form.read().loc.clone(), oninput: move |e| manual_form.write().loc = e.value() }
+                            input {
+                                r#type: "text",
+                                list: "locs",
+                                placeholder: t("schedules.location_placeholder"),
+                                class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full",
+                                value: manual_form.read().loc.clone(),
+                                oninput: move |e| manual_form.write().loc = e.value(),
+                            }
                             datalist { id: "locs",
-                                for v in loc_suggestions.read().iter() { option { value: "{v}" } }
+                                for v in loc_suggestions.read().iter() {
+                                    option { value: "{v}" }
+                                }
                             }
                         }
-                        // start/end datetime
                         div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
                             div { class: "space-y-1",
-                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.start_datetime")} }
-                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: manual_form.read().start_dt.clone(), oninput: move |e| manual_form.write().start_dt = e.value() }
+                                label { class: "text-xs text-slate-600 dark:text-slate-300",
+                                    {t("shifts.start_datetime")}
+                                }
+                                input {
+                                    r#type: "datetime-local",
+                                    class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full",
+                                    value: manual_form.read().start_dt.clone(),
+                                    oninput: move |e| manual_form.write().start_dt = e.value(),
+                                }
                             }
                             div { class: "space-y-1",
-                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.end_datetime")} }
-                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: manual_form.read().end_dt.clone(), oninput: move |e| manual_form.write().end_dt = e.value() }
+                                label { class: "text-xs text-slate-600 dark:text-slate-300",
+                                    {t("shifts.end_datetime")}
+                                }
+                                input {
+                                    r#type: "datetime-local",
+                                    class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full",
+                                    value: manual_form.read().end_dt.clone(),
+                                    oninput: move |e| manual_form.write().end_dt = e.value(),
+                                }
                             }
                         }
-                        // add publishers
                         div { class: "space-y-2",
                             div { class: "flex items-center gap-2",
-                                select { class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full", value: manual_form.read().add_pid.clone(), onchange: move |e| manual_form.write().add_pid = e.value(),
+                                select {
+                                    class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full",
+                                    value: manual_form.read().add_pid.clone(),
+                                    onchange: move |e| manual_form.write().add_pid = e.value(),
                                     option { value: "", {t("common.select_publisher")} }
                                     {
                                         let selected = manual_form.read().selected_pids.clone();
-                                        rsx!( for p in publishers_all.read().iter().filter(|p| !selected.contains(&p.id)) { option { value: "{p.id}", "{p.label}" } } )
+                                        rsx! {
+                                            for p in publishers_all.read().iter().filter(|p| !selected.contains(&p.id)) {
+                                                option { value: "{p.id}", "{p.label}" }
+                                            }
+                                        }
                                     }
                                 }
-                                button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| {
-                                    let add = manual_form.read().add_pid.clone();
-                                    if let Ok(pid) = add.parse::<i64>() {
-                                        let mut w = manual_form.write();
-                                        if !w.selected_pids.contains(&pid) { w.selected_pids.push(pid); }
-                                        w.add_pid.clear();
-                                    }
-                                }, {t("common.add")} }
+                                button {
+                                    class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                                    onclick: move |_| {
+                                        let add = manual_form.read().add_pid.clone();
+                                        if let Ok(pid) = add.parse::<i64>() {
+                                            let mut w = manual_form.write();
+                                            if !w.selected_pids.contains(&pid) {
+                                                w.selected_pids.push(pid);
+                                            }
+                                            w.add_pid.clear();
+                                        }
+                                    },
+                                    {t("common.add")}
+                                }
                             }
-                            // current selected publishers
                             div { class: "flex flex-wrap gap-2",
                                 for pid in manual_form.read().selected_pids.clone() {
                                     {
-                                        let pub_name = publishers_all.read().iter().find(|p| p.id == pid).map(|p| p.label.clone()).unwrap_or_else(|| format!("#{}", pid));
-                                        rsx!( button { class: "text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600", onclick: move |_| { manual_form.write().selected_pids.retain(|x| *x != pid); }, "", {pub_name}, " ✕" } )
+                                        let pub_name = publishers_all
+                                            .read()
+                                            .iter()
+                                            .find(|p| p.id == pid)
+                                            .map(|p| p.label.clone())
+                                            .unwrap_or_else(|| format!("#{}", pid));
+                                        rsx! {
+                                            button {
+                                                class: "text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600",
+                                                onclick: move |_| {
+                                                    manual_form.write().selected_pids.retain(|x| *x != pid);
+                                                },
+                                                ""
+                                                {pub_name}
+                                                " ✕"
+                                            }
+                                        }
                                     }
                                 }
                             }
-                            // warnings (simple absence/same-day checks)
                             {
                                 let mut warns: Vec<String> = Vec::new();
                                 if !manual_form.read().start_dt.is_empty() {
-                                    let date_s = manual_form.read().start_dt.split('T').next().unwrap_or("").to_string();
+                                    let date_s = manual_form
+                                        .read()
+                                        .start_dt
+                                        .split('T')
+                                        .next()
+                                        .unwrap_or("")
+                                        .to_string();
                                     for pid in manual_form.read().selected_pids.iter() {
                                         #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
                                         {
-                                            if let Ok(d) = chrono::NaiveDate::parse_from_str(&date_s, "%Y-%m-%d") {
-                                                let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
-                                                if dao::is_absent_on(*pid, d).unwrap_or(false) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
-                                                let day_start = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(0,0,0).unwrap());
-                                                let day_end = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(23,59,59).unwrap());
-                                                let existing = dao::list_shifts_between(day_start, day_end).unwrap_or_default();
-                                                if existing.iter().any(|sh| sh.publishers.contains(pid)) { warns.push(format!("{} {}", name, t("shifts.warn_already_has_shift"))); }
+                                            if let Ok(d) = chrono::NaiveDate::parse_from_str(
+                                                &date_s,
+                                                "%Y-%m-%d",
+                                            ) {
+                                                let name = publishers_all
+                                                    .read()
+                                                    .iter()
+                                                    .find(|pp| pp.id == *pid)
+                                                    .map(|pp| pp.label.clone())
+                                                    .unwrap_or_else(|| format!("#{pid}"));
+                                                if dao::is_absent_on(*pid, d).unwrap_or(false) {
+                                                    warns
+                                                        .push(
+                                                            format!("{} {}", name, t("shifts.warn_absent_generic")),
+                                                        );
+                                                }
+                                                let day_start = chrono::NaiveDateTime::new(
+                                                    d,
+                                                    chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+                                                );
+                                                let day_end = chrono::NaiveDateTime::new(
+                                                    d,
+                                                    chrono::NaiveTime::from_hms_opt(23, 59, 59).unwrap(),
+                                                );
+                                                let existing = dao::list_shifts_between(day_start, day_end)
+                                                    .unwrap_or_default();
+                                                if existing.iter().any(|sh| sh.publishers.contains(pid)) {
+                                                    warns
+                                                        .push(
+                                                            format!("{} {}", name, t("shifts.warn_already_has_shift")),
+                                                        );
+                                                }
                                             }
                                         }
                                         #[cfg(target_arch = "wasm32")]
                                         {
-                                            let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
-                                            if wasm_backend::is_absent_on(*pid, &date_s) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
-                                            let existing = wasm_backend::list_shifts_between(&format!("{} 00:00:00", date_s), &format!("{} 23:59:59", date_s));
-                                            if existing.iter().any(|sh| sh.publishers.contains(pid)) { warns.push(format!("{} {}", name, t("shifts.warn_already_has_shift"))); }
+                                            let name = publishers_all
+                                                .read()
+                                                .iter()
+                                                .find(|pp| pp.id == *pid)
+                                                .map(|pp| pp.label.clone())
+                                                .unwrap_or_else(|| format!("#{pid}"));
+                                            if wasm_backend::is_absent_on(*pid, &date_s) {
+                                                warns
+                                                    .push(
+                                                        format!("{} {}", name, t("shifts.warn_absent_generic")),
+                                                    );
+                                            }
+                                            let existing = wasm_backend::list_shifts_between(
+                                                &format!("{} 00:00:00", date_s),
+                                                &format!("{} 23:59:59", date_s),
+                                            );
+                                            if existing.iter().any(|sh| sh.publishers.contains(pid)) {
+                                                warns
+                                                    .push(
+                                                        format!("{} {}", name, t("shifts.warn_already_has_shift")),
+                                                    );
+                                            }
                                         }
                                     }
                                 }
-                                (!warns.is_empty()).then(|| rsx!( div { class: "rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 p-2 text-amber-800 dark:text-amber-200 text-xs space-y-1",
-                                    for w in warns { div { {w} } }
-                                } ))
+                                (!warns.is_empty()).then(|| rsx! {
+                                    div { class: "rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 p-2 text-amber-800 dark:text-amber-200 text-xs space-y-1",
+                                        for w in warns {
+                                            div { {w} }
+                                        }
+                                    }
+                                })
                             }
                         }
                     }
                     div { class: "flex items-center justify-end gap-2",
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| manual_open.set(false), {t("common.cancel")} }
-                        button { class: "h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white", onclick: manual_submit, {t("common.create")} }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: move |_| manual_open.set(false),
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white",
+                            onclick: manual_submit,
+                            {t("common.create")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
         // Export modal
-        { export_open().then(|| rsx!(
+        {export_open().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("shifts.export_title")} }
                     p { class: "text-sm text-slate-600 dark:text-slate-300", {t("shifts.export_desc")} }
                     div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        input { r#type: "date", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm", value: export_form.read().start.clone(), oninput: move |e| export_form.write().start = e.value() }
-                        input { r#type: "date", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm", value: export_form.read().end.clone(), oninput: move |e| export_form.write().end = e.value() }
+                        input {
+                            r#type: "date",
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm",
+                            value: export_form.read().start.clone(),
+                            oninput: move |e| export_form.write().start = e.value(),
+                        }
+                        input {
+                            r#type: "date",
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm",
+                            value: export_form.read().end.clone(),
+                            oninput: move |e| export_form.write().end = e.value(),
+                        }
                     }
                     div { class: "flex items-center justify-end gap-2",
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| export_open.set(false), {t("common.cancel")} }
-                        button { class: "h-9 px-3 rounded-md bg-purple-600 hover:bg-purple-500 text-white", onclick: do_export, {t("shifts.export_pdf")} }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: move |_| export_open.set(false),
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md bg-purple-600 hover:bg-purple-500 text-white",
+                            onclick: do_export,
+                            {t("shifts.export_pdf")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
 
         // Edit modal
-        { edit_open().then(|| rsx!(
+        // location and datetime fields
+        // delete from inside edit
+        {edit_open().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("shifts.edit_title")} }
                     div { class: "space-y-2",
-                        // location and datetime fields
                         div { class: "space-y-1",
                             label { class: "text-xs text-slate-600 dark:text-slate-300", {t("schedules.location")} }
-                            input { r#type: "text", list: "locs", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().loc.clone(), oninput: move |e| { let mut w = edit_form.write(); w.loc = e.value(); } }
+                            input {
+                                r#type: "text",
+                                list: "locs",
+                                class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full",
+                                value: edit_form.read().loc.clone(),
+                                oninput: move |e| {
+                                    let mut w = edit_form.write();
+                                    w.loc = e.value();
+                                },
+                            }
                             datalist { id: "locs",
-                                for v in loc_suggestions.read().iter() { option { value: "{v}" } }
+                                for v in loc_suggestions.read().iter() {
+                                    option { value: "{v}" }
+                                }
                             }
                         }
                         div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
                             div { class: "space-y-1",
-                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.start_datetime")} }
-                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().start_dt.clone(), oninput: move |e| { let mut w = edit_form.write(); w.start_dt = e.value(); } }
+                                label { class: "text-xs text-slate-600 dark:text-slate-300",
+                                    {t("shifts.start_datetime")}
+                                }
+                                input {
+                                    r#type: "datetime-local",
+                                    class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full",
+                                    value: edit_form.read().start_dt.clone(),
+                                    oninput: move |e| {
+                                        let mut w = edit_form.write();
+                                        w.start_dt = e.value();
+                                    },
+                                }
                             }
                             div { class: "space-y-1",
-                                label { class: "text-xs text-slate-600 dark:text-slate-300", {t("shifts.end_datetime")} }
-                                input { r#type: "datetime-local", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full", value: edit_form.read().end_dt.clone(), oninput: move |e| { let mut w = edit_form.write(); w.end_dt = e.value(); } }
+                                label { class: "text-xs text-slate-600 dark:text-slate-300",
+                                    {t("shifts.end_datetime")}
+                                }
+                                input {
+                                    r#type: "datetime-local",
+                                    class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm w-full",
+                                    value: edit_form.read().end_dt.clone(),
+                                    oninput: move |e| {
+                                        let mut w = edit_form.write();
+                                        w.end_dt = e.value();
+                                    },
+                                }
                             }
                         }
                         div { class: "flex items-center gap-2",
-                            select { class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full", value: edit_form.read().add_pid.clone(), onchange: move |e| { let mut w = edit_form.write(); w.add_pid = e.value(); },
-                                option { value: "", {t("common.select_publisher")} }
-                                for p in publishers_all.read().iter() { option { value: "{p.id}", "{p.label}" } }
-                            }
-                            button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| {
-                                let add = edit_form.read().add_pid.clone();
-                                if let Ok(pid) = add.parse::<i64>() {
+                            select {
+                                class: "h-9 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 text-sm w-full",
+                                value: edit_form.read().add_pid.clone(),
+                                onchange: move |e| {
                                     let mut w = edit_form.write();
-                                    if !w.selected_pids.contains(&pid) { w.selected_pids.push(pid); }
-                                    w.add_pid.clear();
+                                    w.add_pid = e.value();
+                                },
+                                option { value: "", {t("common.select_publisher")} }
+                                for p in publishers_all.read().iter() {
+                                    option { value: "{p.id}", "{p.label}" }
                                 }
-                            }, {t("common.add")} }
+                            }
+                            button {
+                                class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                                onclick: move |_| {
+                                    let add = edit_form.read().add_pid.clone();
+                                    if let Ok(pid) = add.parse::<i64>() {
+                                        let mut w = edit_form.write();
+                                        if !w.selected_pids.contains(&pid) {
+                                            w.selected_pids.push(pid);
+                                        }
+                                        w.add_pid.clear();
+                                    }
+                                },
+                                {t("common.add")}
+                            }
                         }
                         div { class: "flex flex-wrap gap-2",
                             for pid in edit_form.read().selected_pids.clone() {
                                 {
-                                    let pub_name = publishers_all.read().iter().find(|p| p.id == pid).map(|p| p.label.clone()).unwrap_or_else(|| format!("#{}", pid));
-                                    rsx!( button { class: "text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600", onclick: move |_| { let mut w = edit_form.write(); w.selected_pids.retain(|x| *x != pid); }, "", {pub_name}, " ✕" } )
+                                    let pub_name = publishers_all
+                                        .read()
+                                        .iter()
+                                        .find(|p| p.id == pid)
+                                        .map(|p| p.label.clone())
+                                        .unwrap_or_else(|| format!("#{}", pid));
+                                    rsx! {
+                                        button {
+                                            class: "text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600",
+                                            onclick: move |_| {
+                                                let mut w = edit_form.write();
+                                                w.selected_pids.retain(|x| *x != pid);
+                                            },
+                                            ""
+                                            {pub_name}
+                                            " ✕"
+                                        }
+                                    }
                                 }
                             }
                         }
                         {
                             let mut warns: Vec<String> = Vec::new();
                             if !edit_form.read().start_dt.is_empty() {
-                                let date_s = edit_form.read().start_dt.split('T').next().unwrap_or("").to_string();
+                                let date_s = edit_form
+                                    .read()
+                                    .start_dt
+                                    .split('T')
+                                    .next()
+                                    .unwrap_or("")
+                                    .to_string();
                                 for pid in edit_form.read().selected_pids.iter() {
                                     #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
                                     {
-                                        if let Ok(d) = chrono::NaiveDate::parse_from_str(&date_s, "%Y-%m-%d") {
-                                            let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
-                                            if dao::is_absent_on(*pid, d).unwrap_or(false) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
-                                            let day_start = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(0,0,0).unwrap());
-                                            let day_end = chrono::NaiveDateTime::new(d, chrono::NaiveTime::from_hms_opt(23,59,59).unwrap());
-                                            let existing = dao::list_shifts_between(day_start, day_end).unwrap_or_default();
-                                            if existing.iter().any(|sh| sh.id != edit_form.read().shift_id && sh.publishers.contains(pid)) { warns.push(format!("{} {}", name, t("shifts.warn_already_has_shift"))); }
+                                        if let Ok(d) = chrono::NaiveDate::parse_from_str(
+                                            &date_s,
+                                            "%Y-%m-%d",
+                                        ) {
+                                            let name = publishers_all
+                                                .read()
+                                                .iter()
+                                                .find(|pp| pp.id == *pid)
+                                                .map(|pp| pp.label.clone())
+                                                .unwrap_or_else(|| format!("#{pid}"));
+                                            if dao::is_absent_on(*pid, d).unwrap_or(false) {
+                                                warns
+                                                    .push(
+                                                        format!("{} {}", name, t("shifts.warn_absent_generic")),
+                                                    );
+                                            }
+                                            let day_start = chrono::NaiveDateTime::new(
+                                                d,
+                                                chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+                                            );
+                                            let day_end = chrono::NaiveDateTime::new(
+                                                d,
+                                                chrono::NaiveTime::from_hms_opt(23, 59, 59).unwrap(),
+                                            );
+                                            let existing = dao::list_shifts_between(day_start, day_end)
+                                                .unwrap_or_default();
+                                            if existing
+                                                .iter()
+                                                .any(|sh| {
+                                                    sh.id != edit_form.read().shift_id
+                                                        && sh.publishers.contains(pid)
+                                                })
+                                            {
+                                                warns
+                                                    .push(
+                                                        format!("{} {}", name, t("shifts.warn_already_has_shift")),
+                                                    );
+                                            }
                                         }
                                     }
                                     #[cfg(target_arch = "wasm32")]
                                     {
-                                        let name = publishers_all.read().iter().find(|pp| pp.id == *pid).map(|pp| pp.label.clone()).unwrap_or_else(|| format!("#{pid}"));
-                                        if wasm_backend::is_absent_on(*pid, &date_s) { warns.push(format!("{} {}", name, t("shifts.warn_absent_generic"))); }
-                                        let existing = wasm_backend::list_shifts_between(&format!("{} 00:00:00", date_s), &format!("{} 23:59:59", date_s));
-                                        if existing.iter().any(|sh| sh.id != edit_form.read().shift_id && sh.publishers.contains(pid)) { warns.push(format!("{} {}", name, t("shifts.warn_already_has_shift"))); }
+                                        let name = publishers_all
+                                            .read()
+                                            .iter()
+                                            .find(|pp| pp.id == *pid)
+                                            .map(|pp| pp.label.clone())
+                                            .unwrap_or_else(|| format!("#{pid}"));
+                                        if wasm_backend::is_absent_on(*pid, &date_s) {
+                                            warns
+                                                .push(
+                                                    format!("{} {}", name, t("shifts.warn_absent_generic")),
+                                                );
+                                        }
+                                        let existing = wasm_backend::list_shifts_between(
+                                            &format!("{} 00:00:00", date_s),
+                                            &format!("{} 23:59:59", date_s),
+                                        );
+                                        if existing
+                                            .iter()
+                                            .any(|sh| {
+                                                sh.id != edit_form.read().shift_id
+                                                    && sh.publishers.contains(pid)
+                                            })
+                                        {
+                                            warns
+                                                .push(
+                                                    format!("{} {}", name, t("shifts.warn_already_has_shift")),
+                                                );
+                                        }
                                     }
                                 }
                             }
-                            (!warns.is_empty()).then(|| rsx!( div { class: "rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 p-2 text-amber-800 dark:text-amber-200 text-xs space-y-1",
-                                for w in warns { div { {w} } }
-                            } ))
+                            (!warns.is_empty()).then(|| rsx! {
+                                div { class: "rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 p-2 text-amber-800 dark:text-amber-200 text-xs space-y-1",
+                                    for w in warns {
+                                        div { {w} }
+                                    }
+                                }
+                            })
                         }
                     }
                     div { class: "flex items-center justify-end gap-2",
-                        // delete from inside edit
-                        button { class: "h-9 px-3 rounded-md border border-red-300 text-red-700", onclick: { let mut confirm_delete_id = confirm_delete_id.clone(); let id = edit_form.read().shift_id; move |_| { confirm_delete_id.set(Some(id)); } }, {t("common.delete")} }
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| { edit_open.set(false) }, {t("common.cancel")} }
-                        button { class: "h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white", onclick: edit_submit, {t("common.save")} }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-red-300 text-red-700",
+                            onclick: {
+                                let mut confirm_delete_id = confirm_delete_id.clone();
+                                let id = edit_form.read().shift_id;
+                                move |_| {
+                                    confirm_delete_id.set(Some(id));
+                                }
+                            },
+                            {t("common.delete")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: move |_| { edit_open.set(false) },
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white",
+                            onclick: edit_submit,
+                            {t("common.save")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
         // Confirm delete modal
-        { confirm_delete_id().map(|id| rsx!(
+        {confirm_delete_id().map(|id| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("shifts.confirm_delete_title")} }
-                    p { class: "text-sm text-slate-600 dark:text-slate-300", {t("shifts.confirm_delete_message")} }
+                    p { class: "text-sm text-slate-600 dark:text-slate-300",
+                        {t("shifts.confirm_delete_message")}
+                    }
                     div { class: "flex items-center justify-end gap-2",
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: { let mut confirm_delete_id = confirm_delete_id.clone(); move |_| confirm_delete_id.set(None) }, {t("common.cancel")} }
-                        button { class: "h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white", onclick: { let mut delete_one = delete_one.clone(); let mut confirm_delete_id = confirm_delete_id.clone(); move |_| { if let Some(x) = confirm_delete_id() { delete_one(x); } confirm_delete_id.set(None); } }, {t("common.delete")} }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: {
+                                let mut confirm_delete_id = confirm_delete_id.clone();
+                                move |_| confirm_delete_id.set(None)
+                            },
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: "h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-white",
+                            onclick: {
+                                let mut delete_one = delete_one.clone();
+                                let mut confirm_delete_id = confirm_delete_id.clone();
+                                move |_| {
+                                    if let Some(x) = confirm_delete_id() {
+                                        delete_one(x);
+                                    }
+                                    confirm_delete_id.set(None);
+                                }
+                            },
+                            {t("common.delete")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
         // Auto-generate modal
-        { auto_open().then(|| rsx!(
+        {auto_open().then(|| rsx! {
             div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4",
                 div { class: "w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-5 space-y-4",
                     h2 { class: "text-lg font-semibold", {t("shifts.auto_title")} }
                     p { class: "text-sm text-slate-600 dark:text-slate-300", {t("shifts.auto_desc")} }
                     div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-                        input { r#type: "date", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm", value: auto_form.read().start.clone(), oninput: move |e| auto_form.write().start = e.value() }
-                        input { r#type: "date", class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm", value: auto_form.read().end.clone(), oninput: move |e| auto_form.write().end = e.value() }
+                        input {
+                            r#type: "date",
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm",
+                            value: auto_form.read().start.clone(),
+                            oninput: move |e| auto_form.write().start = e.value(),
+                        }
+                        input {
+                            r#type: "date",
+                            class: "h-10 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm",
+                            value: auto_form.read().end.clone(),
+                            oninput: move |e| auto_form.write().end = e.value(),
+                        }
                     }
                     div { class: "flex items-center justify-end gap-2",
-                        button { class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600", onclick: move |_| auto_open.set(false), {t("common.cancel")} }
-                        button { class: { format!("h-9 px-3 rounded-md {} text-white", if generating() { "bg-slate-400" } else { "bg-emerald-600 hover:bg-emerald-500" }) }, disabled: generating(), onclick: do_autogen, {t("shifts.generate")} }
+                        button {
+                            class: "h-9 px-3 rounded-md border border-slate-300 dark:border-slate-600",
+                            onclick: move |_| auto_open.set(false),
+                            {t("common.cancel")}
+                        }
+                        button {
+                            class: {
+                                format!(
+                                    "h-9 px-3 rounded-md {} text-white",
+                                    if generating() {
+                                        "bg-slate-400"
+                                    } else {
+                                        "bg-emerald-600 hover:bg-emerald-500"
+                                    },
+                                )
+                            },
+                            disabled: generating(),
+                            onclick: do_autogen,
+                            {t("shifts.generate")}
+                        }
                     }
                 }
             }
-        )) }
+        })}
     }
 }
 
