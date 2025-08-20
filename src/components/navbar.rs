@@ -8,37 +8,37 @@ pub fn Navbar() -> Element {
             div { class: "mx-auto w-full max-w-5xl px-3",
                 div { class: "h-14 flex items-stretch justify-between gap-1 sm:gap-2",
                     a {
-                        href: "/",
+                        href: "",
                         class: "flex-1 flex items-center justify-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition",
                         span { class: "hidden sm:inline", "🏠 Home" }
                         span { class: "sm:hidden", "🏠" }
                     }
                     a {
-                        href: "/publishers",
+                        href: "publishers",
                         class: "flex-1 flex items-center justify-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition",
                         span { class: "hidden sm:inline", "👥 Publishers" }
                         span { class: "sm:hidden", "👥" }
                     }
                     a {
-                        href: "/schedules",
+                        href: "schedules",
                         class: "flex-1 flex items-center justify-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition",
                         span { class: "hidden sm:inline", "📅 Schedules" }
                         span { class: "sm:hidden", "📅" }
                     }
                     a {
-                        href: "/shifts",
+                        href: "shifts",
                         class: "flex-1 flex items-center justify-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition",
                         span { class: "hidden sm:inline", "🗓️ Shifts" }
                         span { class: "sm:hidden", "🗓️" }
                     }
                     a {
-                        href: "/absences",
+                        href: "absences",
                         class: "flex-1 flex items-center justify-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition",
                         span { class: "hidden sm:inline", "🚫 Absences" }
                         span { class: "sm:hidden", "🚫" }
                     }
                     a {
-                        href: "/configuration",
+                        href: "configuration",
                         class: "flex-1 flex items-center justify-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition",
                         span { class: "hidden sm:inline", "⚙️ Configuration" }
                         span { class: "sm:hidden", "⚙️" }

@@ -29,7 +29,25 @@ enum Route {
     Configuration {},
 }
 
-fn main() { dioxus::launch(App); }
+fn main() {
+    #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+    install_panic_hook();
+    dioxus::launch(App);
+}
+#[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+fn install_panic_hook() {
+    std::panic::set_hook(Box::new(|info| {
+        use std::fs::{OpenOptions, create_dir_all};
+        use std::io::Write;
+        let mut base = dirs_next::cache_dir().or_else(|| dirs_next::data_local_dir()).unwrap_or(std::env::temp_dir());
+        base.push("dx_app");
+        let _ = create_dir_all(&base);
+    let file = OpenOptions::new().create(true).append(true).open(base.join("panic.log"));
+    if let Ok(mut f) = file {
+            let _ = writeln!(f, "{} | PANIC: {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), info);
+        }
+    }));
+}
 
 #[component]
 fn App() -> Element {
@@ -59,23 +77,23 @@ fn App() -> Element {
     });
 
     rsx! {
-        document::Stylesheet { href: asset!("/assets/tailwind.css") }
+        document::Stylesheet { href: asset!("assets/tailwind.css") }
         head {
             document::Meta { name: "description", content: "Dioxus template project" }
-            document::Link { rel: "icon", href: asset!("/assets/icons/favicon.ico") }
+            document::Link { rel: "icon", href: asset!("assets/icons/favicon.ico") }
             document::Link {
                 rel: "icon",
-                href: asset!("/assets/icons/favicon-32x32.png"),
+                href: asset!("assets/icons/favicon-32x32.png"),
                 sizes: "32x32",
             }
             document::Link {
                 rel: "icon",
-                href: asset!("/assets/icons/favicon-16x16.png"),
+                href: asset!("assets/icons/favicon-16x16.png"),
                 sizes: "16x16",
             }
             document::Link {
                 rel: "apple-touch-icon",
-                href: asset!("/assets/icons/apple-touch-icon.png"),
+                href: asset!("assets/icons/apple-touch-icon.png"),
                 sizes: "180x180",
             }
         

@@ -218,17 +218,17 @@ jobs:
               ;;
 
             "Linux x64 🐧")
-              upx --best target/dx/ppoc-gen/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_amd64.AppImage
-              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen/bundle/linux/bundle/deb/PPOCGen_${{ github.ref_name }}_amd64.deb \
-                target/dx/ppoc-gen/bundle/linux/bundle/rpm/PPOCGen-${{ github.ref_name }}-.x86_64.rpm \
-                target/dx/ppoc-gen/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_amd64.AppImage
+              upx --best target/dx/ppoc-gen/bundle/linux/bundle/appimage/PpocGen_${{ github.ref_name }}_amd64.AppImage
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen/bundle/linux/bundle/deb/PpocGen_${{ github.ref_name }}_amd64.deb \
+                target/dx/ppoc-gen/bundle/linux/bundle/rpm/PpocGen-${{ github.ref_name }}-.x86_64.rpm \
+                target/dx/ppoc-gen/bundle/linux/bundle/appimage/PpocGen_${{ github.ref_name }}_amd64.AppImage
               ;;
 
             "Linux ARM64 🐧")
-              upx --best target/dx/ppoc-gen/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_aarch64.AppImage
-              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen/bundle/linux/bundle/deb/PPOCGen_${{ github.ref_name }}_arm64.deb \
-                target/dx/ppoc-gen/bundle/linux/bundle/rpm/PPOCGen-${{ github.ref_name }}-.aarch64.rpm \
-                target/dx/ppoc-gen/bundle/linux/bundle/appimage/PPOCGen_${{ github.ref_name }}_aarch64.AppImage
+              upx --best target/dx/ppoc-gen/bundle/linux/bundle/appimage/PpocGen_${{ github.ref_name }}_aarch64.AppImage
+              gh release upload ${{ github.ref_name }} target/dx/ppoc-gen/bundle/linux/bundle/deb/PpocGen_${{ github.ref_name }}_arm64.deb \
+                target/dx/ppoc-gen/bundle/linux/bundle/rpm/PpocGen-${{ github.ref_name }}-.aarch64.rpm \
+                target/dx/ppoc-gen/bundle/linux/bundle/appimage/PpocGen_${{ github.ref_name }}_aarch64.AppImage
               ;;
 
             "MacOS x64 🍏")

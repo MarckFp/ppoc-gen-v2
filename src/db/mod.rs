@@ -5,6 +5,24 @@ pub mod native {
     use rusqlite::{Connection, Result};
     use std::path::PathBuf;
     use std::sync::{Mutex, MutexGuard};
+    use std::fs::{OpenOptions, create_dir_all};
+    use std::io::Write;
+    fn log_note(msg: &str) {
+        let mut base = log_base_dir();
+        let _ = create_dir_all(&base);
+        base.push("app.log");
+        if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(&base) {
+            let _ = writeln!(f, "{} | {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), msg);
+        }
+    }
+
+    fn log_base_dir() -> PathBuf {
+        if let Some(p) = dirs_next::cache_dir() { return p.join("dx_app"); }
+        if let Some(p) = dirs_next::data_local_dir() { return p.join("dx_app"); }
+        let mut p = std::env::temp_dir();
+        p.push("dx_app");
+        p
+    }
     #[cfg(feature = "encryption")] use rand::RngCore;
     #[cfg(feature = "encryption")] use zeroize::Zeroize;
     // dao is defined as a sibling module at the crate::db level
@@ -12,14 +30,30 @@ pub mod native {
     pub static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
         let path = db_file_path();
         if let Some(parent) = path.parent() { let _ = std::fs::create_dir_all(parent); }
-        let conn = Connection::open(path).expect("open sqlite db");
-        let _ = conn.execute("PRAGMA foreign_keys = ON;", []);
-        #[cfg(feature = "encryption")] {
-            let mut tmp = conn;
-            apply_key(&mut tmp).expect("apply encryption key");
-            let conn = tmp;
-        }
-        apply_migrations(&conn).expect("apply migrations");
+
+        // Try to open file-backed database; if it fails, fall back to in-memory so the app still launches.
+        let conn = match Connection::open(&path) {
+            Ok(c) => c,
+            Err(e) => {
+                log_note(&format!("Failed to open DB at {:?}: {}. Falling back to in-memory DB (no persistence).", &path, e));
+                Connection::open_in_memory().unwrap()
+            }
+        };
+
+        let conn = {
+            let _ = ();
+            // Apply PRAGMA and optional encryption key
+            #[allow(unused_mut)]
+            let mut c = conn;
+            let _ = c.execute("PRAGMA foreign_keys = ON;", []);
+            #[cfg(feature = "encryption")] {
+                if path.as_os_str().len() > 0 && path.as_os_str() != ":memory:" {
+                    let _ = apply_key(&mut c);
+                }
+            }
+            c
+        };
+    if let Err(e) = apply_migrations(&conn) { log_note(&format!("DB migrations error: {}", e)); }
         let today = chrono::Local::now().date_naive();
         let _ = conn.execute("DELETE FROM Absences WHERE end_date < ?1", [today.to_string()]);
         Mutex::new(conn)
@@ -28,8 +62,25 @@ pub mod native {
     pub fn connection() -> MutexGuard<'static, Connection> { DB.lock().unwrap() }
 
     fn db_file_path() -> PathBuf {
-        let mut base = dirs_next::data_local_dir().unwrap_or(std::env::current_dir().unwrap());
+        // Try a series of writable locations across platforms
+        let mut candidates: Vec<PathBuf> = Vec::new();
+        if let Some(p) = dirs_next::data_local_dir() { candidates.push(p); }
+        if let Some(p) = dirs_next::data_dir() { candidates.push(p); }
+        if let Some(p) = dirs_next::cache_dir() { candidates.push(p); }
+        if let Some(mut p) = dirs_next::home_dir() { p.push(".local"); candidates.push(p); }
+        candidates.push(std::env::temp_dir());
+
+        for mut base in candidates {
+            base.push("dx_app");
+            if std::fs::create_dir_all(&base).is_ok() {
+                base.push("data.db");
+                return base;
+            }
+        }
+        // Last fallback: relative path
+        let mut base = PathBuf::from(".");
         base.push("dx_app");
+        let _ = std::fs::create_dir_all(&base);
         base.push("data.db");
         base
     }
