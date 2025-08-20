@@ -1,5 +1,11 @@
 use dioxus::prelude::*;
-use crate::i18n::{t, weekdays_for_locale, weekday_index_from_name, weekday_index_for_date, weekday_name_for_date};
+use crate::i18n::{
+    t,
+    weekdays_for_locale,
+    weekday_name_for_date,
+};
+#[cfg(any(all(feature = "native-db", not(target_arch = "wasm32")), target_arch = "wasm32"))]
+use crate::i18n::{weekday_index_for_date, weekday_index_from_name};
 
 // Backends
 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
@@ -9,7 +15,7 @@ use crate::db::wasm_store as wasm_backend;
 
 // Date/time imports per target
 #[cfg(not(target_arch = "wasm32"))]
-use chrono::{Datelike, Duration, NaiveDate};
+use chrono::{Datelike, NaiveDate};
 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
 use chrono::{NaiveDateTime, NaiveTime};
 #[cfg(target_arch = "wasm32")]
@@ -56,20 +62,11 @@ struct EditForm {
 }
 
 #[derive(Clone)]
-struct PublisherItem { id: i64, label: String, gender: String, is_shift_manager: bool }
+struct PublisherItem { id: i64, label: String }
 
 #[derive(Clone)]
-struct ScheduleFull {
-    id: i64,
-    location: String,
-    start_hour: String,
-    end_hour: String,
-    weekday: String,
-        // Manual create modal
-    num_shift_managers: i64,
-    num_brothers: i64,
-    num_sisters: i64,
-}
+#[allow(dead_code)]
+struct ScheduleFull { location: String }
 
 // Date helpers used across the view
 fn fmt_date_ymd(ymd: &(i32, u32, u32)) -> String { format!("{:04}-{:02}-{:02}", ymd.0, ymd.1, ymd.2) }
@@ -161,25 +158,13 @@ pub fn Shifts() -> Element {
                     .iter()
                     .map(|p| {
                         let label = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
-                        PublisherItem { id: p.id, label, gender: p.gender.clone(), is_shift_manager: p.is_shift_manager }
+                        PublisherItem { id: p.id, label }
                     })
                     .collect();
                 publishers_all.set(mapped);
                 // schedules full
                 let sch = dao::list_schedules().unwrap_or_default();
-                let full: Vec<ScheduleFull> = sch
-                    .iter()
-                    .map(|s| ScheduleFull {
-                        id: s.id,
-                        location: s.location.clone(),
-                        start_hour: s.start_hour.clone(),
-                        end_hour: s.end_hour.clone(),
-                        weekday: s.weekday.clone(),
-                        num_shift_managers: s.num_shift_managers,
-                        num_brothers: s.num_brothers,
-                        num_sisters: s.num_sisters,
-                    })
-                    .collect();
+                let full: Vec<ScheduleFull> = sch.iter().map(|s| ScheduleFull { location: s.location.clone() }).collect();
                 schedules_full_sig.set(full.clone());
 
                 // list items for current month
@@ -219,25 +204,13 @@ pub fn Shifts() -> Element {
                     .iter()
                     .map(|p| {
                         let label = if name_order == "last_first" { format!("{} {}", p.last_name, p.first_name) } else { format!("{} {}", p.first_name, p.last_name) };
-                        PublisherItem { id: p.id, label, gender: p.gender.clone(), is_shift_manager: p.is_shift_manager }
+                        PublisherItem { id: p.id, label }
                     })
                     .collect();
                 publishers_all.set(mapped);
                 // schedules full
                 let sch = wasm_backend::list_schedules();
-                let full: Vec<ScheduleFull> = sch
-                    .iter()
-                    .map(|s| ScheduleFull {
-                        id: s.id,
-                        location: s.location.clone(),
-                        start_hour: s.start_hour.clone(),
-                        end_hour: s.end_hour.clone(),
-                        weekday: s.weekday.clone(),
-                        num_shift_managers: s.num_shift_managers,
-                        num_brothers: s.num_brothers,
-                        num_sisters: s.num_sisters,
-                    })
-                    .collect();
+                let full: Vec<ScheduleFull> = sch.iter().map(|s| ScheduleFull { location: s.location.clone() }).collect();
                 schedules_full_sig.set(full.clone());
 
                 // list items for current month

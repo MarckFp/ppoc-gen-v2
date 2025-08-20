@@ -123,7 +123,6 @@ pub mod native {
 
 // Wasm path re-export minimal store API
 #[cfg(target_arch = "wasm32")] pub mod wasm_store;
-#[cfg(target_arch = "wasm32")] pub use wasm_store::*;
 
 
 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]

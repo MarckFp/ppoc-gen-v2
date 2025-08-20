@@ -111,6 +111,7 @@ pub fn weekdays_for_locale() -> Vec<String> {
 }
 
 // Map localized weekday name to index 1..=7 (Mon=1..Sun=7)
+#[allow(dead_code)]
 pub fn weekday_index_from_name(name: &str) -> u32 {
     let lower = name.to_lowercase();
     // First try dynamic localized names from weekdays_for_locale

@@ -218,6 +218,7 @@ pub fn list_relationships_for_publisher(p: i64) -> Vec<(i64, RelationshipKind)> 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Absence { pub id: i64, pub publisher_id: i64, pub start_date: String, pub end_date: String, pub description: Option<String> }
 
+#[allow(dead_code)]
 pub fn list_absences() -> Vec<Absence> { DB.lock().unwrap().absences.clone() }
 
 pub fn list_future_absences(today: &str) -> Vec<Absence> {
@@ -304,6 +305,7 @@ pub fn update_shift_publishers(id: i64, publishers: &[i64], warning: Option<&str
 }
 
 // Update shift start/end datetimes (web)
+#[allow(dead_code)]
 pub fn update_shift_datetime(id: i64, start: &str, end: &str, warning: Option<&str>) {
     let mut db = DB.lock().unwrap();
     if let Some(sh) = db.shifts.iter_mut().find(|s| s.id == id) {
@@ -334,6 +336,7 @@ pub fn delete_shift(id: i64) {
     persist();
 }
 
+#[allow(dead_code)]
 pub fn delete_shifts_in_range(start: &str, end: &str) -> usize {
     let mut db = DB.lock().unwrap();
     let s = start.to_string();
