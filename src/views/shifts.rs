@@ -17,6 +17,8 @@ use crate::db::wasm_store as wasm_backend;
 #[cfg(not(target_arch = "wasm32"))]
 use chrono::{Datelike, NaiveDate};
 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+use chrono::Duration;
+#[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
 use chrono::{NaiveDateTime, NaiveTime};
 #[cfg(target_arch = "wasm32")]
 use web_sys::window;
@@ -440,7 +442,6 @@ pub fn Shifts() -> Element {
                 let schedules = dao::list_schedules().unwrap_or_default();
                 let publishers = dao::list_publishers().unwrap_or_default();
                 // relationships map
-                use std::collections::HashMap;
                 let mut rel_map: HashMap<i64, Vec<(i64, dao::RelationshipKind)>> = HashMap::new();
                 for p in &publishers { if let Ok(rs) = dao::list_relationships_for_publisher(p.id) { rel_map.insert(p.id, rs); } }
                 // fairness window
@@ -465,7 +466,7 @@ pub fn Shifts() -> Element {
                     }
                 }
                 let mut assigned_on_day: HashMap<NaiveDate, HashSet<i64>> = HashMap::new();
-                let seed = chrono::Local::now().timestamp_nanos() as u64;
+                let seed = chrono::Local::now().timestamp_nanos_opt().unwrap_or(0) as u64;
                 let mut rand_for = |pid: i64, day: NaiveDate| -> f64 {
                     let x = (pid as u64)
                         .wrapping_mul(6364136223846793005)

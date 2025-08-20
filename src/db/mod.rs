@@ -7,6 +7,7 @@ pub mod native {
     use std::sync::{Mutex, MutexGuard};
     #[cfg(feature = "encryption")] use rand::RngCore;
     #[cfg(feature = "encryption")] use zeroize::Zeroize;
+    #[path = "dao.rs"]
     pub mod dao;
 
     pub static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
