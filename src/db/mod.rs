@@ -7,8 +7,7 @@ pub mod native {
     use std::sync::{Mutex, MutexGuard};
     #[cfg(feature = "encryption")] use rand::RngCore;
     #[cfg(feature = "encryption")] use zeroize::Zeroize;
-    #[path = "dao.rs"]
-    pub mod dao;
+    // dao is defined as a sibling module at the crate::db level
 
     pub static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
         let path = db_file_path();
@@ -122,8 +121,12 @@ pub mod native {
     impl<T> OptionalRow for rusqlite::Result<T> { type Output = T; fn optional(self) -> Result<Option<T>> { match self { Ok(v)=>Ok(Some(v)), Err(rusqlite::Error::QueryReturnedNoRows)=>Ok(None), Err(e)=>Err(e) } } }
 }
 
-// Wasm path re-export minimal store API
+// Wasm path store API
 #[cfg(target_arch = "wasm32")] pub mod wasm_store;
+
+// Expose dao module at top-level for native targets (file: src/db/dao.rs)
+#[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
+pub mod dao;
 
 
 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
@@ -205,5 +208,3 @@ CREATE INDEX IF NOT EXISTS idx_availability_schedule ON Availability(schedule_id
 // Native connection re-export for external code
 #[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
 pub use native::connection;
-#[cfg(all(feature = "native-db", not(target_arch = "wasm32")))]
-pub use native::dao;

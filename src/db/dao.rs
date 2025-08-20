@@ -103,6 +103,7 @@ pub fn update_configuration(name: &str, theme: &str, name_order: &str, week_star
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn configuration_is_set() -> bool {
     if let Ok(cfg) = get_configuration() {
         let name_ok = !cfg.congregation_name.trim().is_empty() && cfg.congregation_name != "Congregation";
@@ -253,6 +254,7 @@ pub fn update_shift_publishers(id: i64, publishers: &[i64], warning: Option<&str
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn update_shift_datetime(id: i64, start: NaiveDateTime, end: NaiveDateTime, warning: Option<&str>) -> Result<()> {
     let conn = connection();
     conn.execute(
@@ -284,6 +286,7 @@ pub fn update_shift_datetime_location(id: i64, start: NaiveDateTime, end: NaiveD
 
 pub fn delete_shift(id: i64) -> Result<()> { let conn = connection(); conn.execute("DELETE FROM Shifts WHERE id=?1", params![id])?; Ok(()) }
 
+#[allow(dead_code)]
 pub fn delete_shifts_in_range(start: NaiveDateTime, end: NaiveDateTime) -> Result<usize> { let conn = connection(); let n = conn.execute("DELETE FROM Shifts WHERE start_datetime >= ?1 AND end_datetime <= ?2", params![start.format("%Y-%m-%d %H:%M:%S").to_string(), end.format("%Y-%m-%d %H:%M:%S").to_string()])?; Ok(n) }
 
 // ================= Availability =================

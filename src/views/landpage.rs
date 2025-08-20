@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use crate::i18n::{set_lang, set_date_format};
 use crate::i18n::t;
 
-#[cfg(all(feature = "native-db", not(target_arch = "wasm32")))] mod backend { pub use crate::db::dao::{configuration_is_set, update_configuration}; }
+#[cfg(all(feature = "native-db", not(target_arch = "wasm32")))] mod backend { pub use crate::db::dao::update_configuration; }
 #[cfg(target_arch = "wasm32")] use crate::db::wasm_store as backend;
 #[cfg(all(not(target_arch = "wasm32"), not(feature = "native-db")))]
 #[allow(dead_code)]
@@ -23,7 +23,7 @@ pub fn Landpage() -> Element {
         let n = name.read().trim().to_string();
         if n.is_empty() { return; }
         // Persist configuration (default name order first_last, choose week_start)
-    backend::update_configuration(&n, &theme.read(), "first_last", &week_start.read(), &language.read(), &date_format.read());
+    let _ = backend::update_configuration(&n, &theme.read(), "first_last", &week_start.read(), &language.read(), &date_format.read());
     // Flip global flag so components react immediately and update i18n
         configured.set(true);
     set_lang(&language.read());

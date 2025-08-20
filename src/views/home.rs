@@ -52,7 +52,7 @@ pub fn Home() -> Element {
                 weakest_schedules_managers.set(by_mgr.into_iter().take(3).collect());
             }
             // top/bottom assigned in last 60 days
-            use chrono::{Local, Duration, NaiveDate, NaiveDateTime, NaiveTime};
+            use chrono::{Local, Duration, NaiveDateTime, NaiveTime};
             let end = Local::now().naive_local().date();
             let start = end - Duration::days(60);
             let hist = backend::list_shifts_between(
