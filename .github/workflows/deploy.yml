@@ -180,7 +180,7 @@ jobs:
 
       - name: Upload Github Pages 📤
         if: ${{ matrix.platform == 'web'}}
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: target/dx/ppoc-gen/release/web/public/
 

@@ -50,7 +50,7 @@ jobs:
           cp target/dx/dx-app/release/web/public/index.html target/dx/dx-app/release/web/public/404.html
 
       - name: Upload web files as artifacts 📦
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: target/dx/dx-app/release/web/public/
 
